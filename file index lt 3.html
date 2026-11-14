@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LT III Kwarcab Tangerang 2026 - Sistem Informasi & Penilaian</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- HTML5 QR Code Scanner -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- JsBarcode untuk Cetak Kartu Peserta -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <!-- SheetJS (Excel Import & Template Download) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- jsPDF & AutoTable untuk Laporan PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pramuka: {
+              dark: '#3E2723',
+              primary: '#5D4037',
+              medium: '#795548',
+              khaki: '#D7CCC8',
+              light: '#EFEBE9',
+              gold: '#D97706',
+              goldLight: '#F59E0B'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+    .loader-spin {
+      border-top-color: #D97706;
+      animation: spinner 0.8s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-pramuka-light text-stone-800 font-sans min-h-screen flex flex-col">
+
+  <!-- ========================================================= -->
+  <!-- KONFIGURASI URL WEB APP GOOGLE APPS SCRIPT (WAJIB DIISI)  -->
+  <!-- ========================================================= -->
+  <script>
+    // GANTI URL DI BAWAH INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA
+    const API_URL = "https://script.google.com/macros/s/GANTI_DENGAN_ID_DEPLOYMENT_ANDA/exec";
+  </script>
+
+  <!-- GLOBAL LOADING OVERLAY -->
+  <div id="global-loader" class="fixed inset-0 bg-black/60 z-50 hidden flex-col items-center justify-center text-white backdrop-blur-sm">
+    <div class="loader-spin ease-linear rounded-full border-4 border-t-4 border-stone-200 h-14 w-14 mb-3"></div>
+    <p id="loader-text" class="font-semibold tracking-wide text-sm">Menyinkronkan data dengan server...</p>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed top-5 right-5 z-50 hidden transform transition-all duration-300 max-w-sm w-full shadow-xl rounded-xl p-4 text-white flex items-center gap-3">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-xl"></i>
+    <div class="text-sm font-medium" id="toast-msg">Notifikasi</div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- HALAMAN 1: LOGIN                                          -->
+  <!-- ========================================================= -->
+  <section id="login-screen" class="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-pramuka-dark via-pramuka-primary to-amber-900">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border-t-8 border-pramuka-gold">
+      <div class="p-8 text-center bg-pramuka-light/60 border-b border-stone-200">
+        <div class="w-20 h-20 mx-auto mb-3 rounded-full bg-pramuka-dark text-amber-400 flex items-center justify-center shadow-lg overflow-hidden border-2 border-pramuka-gold">
+          <img id="login-logo-img" src="" alt="Logo" class="w-full h-full object-contain hidden bg-white p-1" />
+          <i id="login-logo-icon" class="fa-solid fa-campground text-3xl"></i>
+        </div>
+        <h1 class="text-lg font-extrabold text-pramuka-dark uppercase tracking-tight leading-snug">
+          Lomba Tingkat Regu Penggalang Tiga (LT III)
+        </h1>
+        <p class="text-xs font-bold text-pramuka-gold uppercase tracking-widest mt-1">
+          Kwartir Cabang Tangerang Tahun 2026
+        </p>
+      </div>
+
+      <form id="form-login" class="p-8 space-y-5">
+        <div>
+          <label class="block text-xs font-bold uppercase text-stone-600 mb-1.5">Nama Pengguna (User / Admin)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
+              <i class="fa-solid fa-user"></i>
+            </span>
+            <input type="text" id="login-nama" required placeholder="Masukkan nama pengguna..."
+              class="w-full pl-10 pr-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold outline-none text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-stone-600 mb-1.5">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input type="password" id="login-password" required placeholder="Masukkan password..."
+              class="w-full pl-10 pr-10 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold outline-none text-sm" />
+            <button type="button" onclick="togglePassVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600">
+              <i id="eye-icon" class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="w-full py-3 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket text-amber-400"></i> MASUK APLIKASI
+        </button>
+
+        <div class="text-center pt-2">
+          <button type="button" onclick="syncAllData(true)" class="text-xs text-stone-500 hover:text-pramuka-primary underline">
+            <i class="fa-solid fa-rotate mr-1"></i> Muat Ulang Koneksi Database
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- HALAMAN 2: MAIN APPLICATION SHELL                         -->
+  <!-- ========================================================= -->
+  <div id="app-shell" class="hidden flex-1 flex flex-col">
+    <!-- TOP HEADER -->
+    <header class="bg-pramuka-dark text-white shadow-lg border-b-4 border-pramuka-gold sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-lg bg-white p-1 flex items-center justify-center shadow overflow-hidden shrink-0">
+            <img id="header-logo-img" src="" alt="Logo LT III" class="w-full h-full object-contain hidden" />
+            <i id="header-logo-icon" class="fa-solid fa-compass text-pramuka-dark text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-sm md:text-base tracking-wide uppercase leading-tight text-amber-300">
+              LT III Kwarcab Tangerang 2026
+            </h1>
+            <p class="text-[11px] text-stone-300">Sistem Daftar Ulang & Penilaian Lomba Regu Penggalang</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="syncAllData(true)" title="Sinkronisasi Data Terbaru" class="px-3 py-1.5 bg-pramuka-primary hover:bg-pramuka-medium rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-stone-600">
+            <i class="fa-solid fa-arrows-rotate text-amber-400"></i> <span class="hidden sm:inline">Refresh</span>
+          </button>
+          <div class="text-right hidden sm:block">
+            <div id="user-display-name" class="text-xs font-bold text-white">Admin</div>
+            <div id="user-display-role" class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-pramuka-gold text-white inline-block font-bold">Admin</div>
+          </div>
+          <button onclick="logout()" class="px-3 py-1.5 bg-red-700 hover:bg-red-800 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-power-off"></i> Keluar
+          </button>
+        </div>
+      </div>
+
+      <!-- NAVIGATION BAR -->
+      <nav class="bg-pramuka-primary/90 border-t border-stone-700 overflow-x-auto">
+        <div class="max-w-7xl mx-auto px-4 flex space-x-1 py-1.5 text-xs font-bold whitespace-nowrap">
+          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
+          </button>
+          <button onclick="switchTab('scan')" data-tab="scan" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-qrcode"></i> Scan Daftar Ulang
+          </button>
+          <button onclick="switchTab('penilaian')" data-tab="penilaian" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition bg-amber-600/30 text-amber-200">
+            <i class="fa-solid fa-star-half-stroke"></i> Penilaian
+          </button>
+          <button onclick="switchTab('peserta')" data-tab="peserta" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-users"></i> Data Peserta
+          </button>
+          <button onclick="switchTab('users')" data-tab="users" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-user-shield"></i> Data User
+          </button>
+          <button onclick="switchTab('laporan')" data-tab="laporan" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-file-pdf"></i> Laporan & PDF
+          </button>
+          <button onclick="switchTab('pengaturan')" data-tab="pengaturan" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-gear"></i> Logo & Pengesahan
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+
+      <!-- ===================================================== -->
+      <!-- TAB 1: DASHBOARD (ADMIN)                              -->
+      <!-- ===================================================== -->
+      <div id="tab-dashboard" class="tab-content space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl shadow border-l-4 border-pramuka-primary flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-stone-500 uppercase">Total Regu Peserta</p>
+              <h3 id="stat-total-peserta" class="text-3xl font-extrabold text-pramuka-dark mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-pramuka-light text-pramuka-primary flex items-center justify-center text-xl">
+              <i class="fa-solid fa-flag"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow border-l-4 border-emerald-600 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-stone-500 uppercase">Sudah Daftar Ulang</p>
+              <h3 id="stat-sudah-hadir" class="text-3xl font-extrabold text-emerald-700 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow border-l-4 border-amber-500 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-stone-500 uppercase">Belum Daftar Ulang</p>
+              <h3 id="stat-belum-hadir" class="text-3xl font-extrabold text-amber-600 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow border-l-4 border-blue-600 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-stone-500 uppercase">Data Nilai Masuk</p>
+              <h3 id="stat-total-nilai" class="text-3xl font-extrabold text-blue-700 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-award"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Akses Cepat & Log Kehadiran Terbaru -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow space-y-4">
+            <h2 class="font-bold text-pramuka-dark border-b pb-2 flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-pramuka-gold"></i> Pintasan Cepat Panitia
+            </h2>
+            <button onclick="switchTab('scan')" class="w-full py-3 px-4 bg-pramuka-dark hover:bg-pramuka-primary text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
+              <span><i class="fa-solid fa-qrcode mr-2 text-amber-400"></i> Buka Scanner Daftar Ulang</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button onclick="switchTab('penilaian')" class="w-full py-3 px-4 bg-pramuka-gold hover:bg-amber-700 text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
+              <span><i class="fa-solid fa-pen-to-square mr-2"></i> Input / Impor Penilaian Lomba</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button onclick="switchTab('laporan')" class="w-full py-3 px-4 bg-stone-700 hover:bg-stone-800 text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
+              <span><i class="fa-solid fa-print mr-2 text-amber-300"></i> Cetak Laporan Hasil PDF</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+              <h2 class="font-bold text-pramuka-dark flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Log Daftar Ulang Terbaru
+              </h2>
+              <span class="text-xs text-stone-500">Real-time dari Sheet DAFTAR ULANG</span>
+            </div>
+            <div class="overflow-x-auto max-h-72">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-pramuka-light text-pramuka-dark uppercase font-bold sticky top-0">
+                  <tr>
+                    <th class="p-2.5">Waktu</th>
+                    <th class="p-2.5">No. Peserta</th>
+                    <th class="p-2.5">Nama Regu</th>
+                    <th class="p-2.5">Kwarran / Gudep</th>
+                    <th class="p-2.5">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-du-tbody" class="divide-y divide-stone-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 2: SCAN DAFTAR ULANG (KAMERA & BARCODE SCANNER)   -->
+      <!-- ===================================================== -->
+      <div id="tab-scan" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- KOLOM KIRI: SCANNER KAMERA & USB -->
+          <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow space-y-5 border-t-4 border-pramuka-gold">
+            <div class="flex items-center justify-between">
+              <h2 class="font-extrabold text-pramuka-dark text-base flex items-center gap-2">
+                <i class="fa-solid fa-barcode text-pramuka-gold"></i> Pemindai Daftar Ulang
+              </h2>
+              <span class="text-[11px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">
+                <i class="fa-solid fa-volume-high mr-1"></i> Suara Aktif
+              </span>
+            </div>
+
+            <!-- INPUT BARCODE SCANNER EKSTERNAL / MANUAL -->
+            <div class="bg-pramuka-light/70 p-4 rounded-xl border border-pramuka-khaki">
+              <label class="block text-xs font-bold text-pramuka-dark uppercase mb-1.5">
+                <i class="fa-solid fa-keyboard mr-1"></i> Barcode Scanner USB / Input Nomor Peserta
+              </label>
+              <form id="form-manual-scan" class="flex gap-2">
+                <input type="text" id="scan-input-code" placeholder="Scan barcode atau ketik No. Peserta..." autocomplete="off"
+                  class="flex-1 px-3.5 py-2.5 bg-white border-2 border-pramuka-primary rounded-xl font-bold text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                <button type="submit" class="px-4 py-2.5 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-sm shadow">
+                  Proses
+                </button>
+              </form>
+              <p class="text-[11px] text-stone-500 mt-1.5">Arahkan kursor di kotak ini jika menggunakan alat barcode scanner tembak.</p>
+            </div>
+
+            <!-- KAMERA LAPTOP / HP -->
+            <div class="border border-stone-200 rounded-xl p-4 bg-stone-50 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="text-xs font-bold text-stone-700"><i class="fa-solid fa-camera mr-1 text-pramuka-primary"></i> Kamera Laptop / HP</span>
+                <div class="flex gap-1.5">
+                  <button type="button" id="btn-start-cam" onclick="startCameraScanner()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold">
+                    <i class="fa-solid fa-play mr-1"></i> Nyalakan Kamera
+                  </button>
+                  <button type="button" id="btn-switch-cam" onclick="switchCameraFacing()" class="hidden px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold">
+                    <i class="fa-solid fa-camera-rotate mr-1"></i> Putar
+                  </button>
+                  <button type="button" id="btn-stop-cam" onclick="stopCameraScanner()" class="hidden px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold">
+                    <i class="fa-solid fa-stop mr-1"></i> Matikan
+                  </button>
+                </div>
+              </div>
+
+              <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px] flex items-center justify-center text-stone-400 text-xs">
+                Kamera belum aktif. Klik "Nyalakan Kamera" untuk memindai.
+              </div>
+            </div>
+          </div>
+
+          <!-- KOLOM KANAN: TABEL RIWAYAT DAFTAR ULANG -->
+          <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3 mb-4">
+              <div>
+                <h2 class="font-extrabold text-pramuka-dark text-base">Data Peserta Sudah Daftar Ulang</h2>
+                <p class="text-xs text-stone-500">Otomatis tersimpan ke Google Sheets (Sheet: <code class="font-bold">DAFTAR ULANG</code>)</p>
+              </div>
+              <input type="text" id="search-du" onkeyup="renderDaftarUlangTable()" placeholder="Cari regu / kwarran..."
+                class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-pramuka-gold" />
+            </div>
+
+            <div class="overflow-x-auto flex-1 max-h-[480px]">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-pramuka-dark text-white uppercase sticky top-0">
+                  <tr>
+                    <th class="p-3">Waktu Scan</th>
+                    <th class="p-3">No. Peserta</th>
+                    <th class="p-3">Nama Regu</th>
+                    <th class="p-3">Kwarran</th>
+                    <th class="p-3">No. Gudep</th>
+                    <th class="p-3">Petugas</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-daftar-ulang" class="divide-y divide-stone-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 3: HALAMAN PENILAIAN (MANUAL & IMPOR EXCEL)       -->
+      <!-- ===================================================== -->
+      <div id="tab-penilaian" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- FORM INPUT PENILAIAN MANUAL -->
+          <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-primary space-y-4">
+            <h2 class="font-extrabold text-pramuka-dark text-base flex items-center gap-2 border-b pb-2.5">
+              <i class="fa-solid fa-pen-ruler text-pramuka-gold"></i> Input Penilaian Lomba (Manual)
+            </h2>
+
+            <form id="form-penilaian" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta *</label>
+                <input type="text" id="nilai-no-peserta" list="list-peserta-options" required placeholder="Ketik atau pilih Nomor Peserta..."
+                  oninput="autoFillPesertaNilai()"
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                <datalist id="list-peserta-options"></datalist>
+              </div>
+
+              <!-- Info Regu Otomatis Muncul -->
+              <div class="grid grid-cols-2 gap-3 bg-pramuka-light/80 p-3 rounded-xl border border-pramuka-khaki">
+                <div>
+                  <span class="block text-[10px] font-bold text-stone-500 uppercase">Nama Regu</span>
+                  <input type="text" id="nilai-nama-regu" readonly placeholder="-" class="w-full bg-transparent font-bold text-xs text-pramuka-dark outline-none" />
+                </div>
+                <div>
+                  <span class="block text-[10px] font-bold text-stone-500 uppercase">Nomor Kwarran</span>
+                  <input type="text" id="nilai-kwarran" readonly placeholder="-" class="w-full bg-transparent font-bold text-xs text-pramuka-dark outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Mata Lomba *</label>
+                <input type="text" id="nilai-nama-lomba" list="list-lomba-saran" required placeholder="Contoh: Pionering / PBB / Semaphore / P3K..."
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                <datalist id="list-lomba-saran">
+                  <option value="Pionering"></option>
+                  <option value="LKBB / PBB Tongkat"></option>
+                  <option value="Semaphore & Morse"></option>
+                  <option value="Pertolongan Pertama (P3K)"></option>
+                  <option value="Menaksir & Peta Pita"></option>
+                  <option value="Tapak Kemah & Administrasi Regu"></option>
+                  <option value="Pentas Seni Budaya"></option>
+                  <option value="Masak Rimba / Bivak"></option>
+                </datalist>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nilai Juri 1 *</label>
+                  <input type="number" step="0.01" id="nilai-juri-1" required placeholder="0" oninput="hitungTotalNilai()"
+                    class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold text-center focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nilai Juri 2 *</label>
+                  <input type="number" step="0.01" id="nilai-juri-2" required placeholder="0" oninput="hitungTotalNilai()"
+                    class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold text-center focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                </div>
+              </div>
+
+              <!-- TAMPILAN JUMLAH OTOMATIS -->
+              <div class="bg-amber-50 border-2 border-pramuka-gold rounded-xl p-3.5 flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase text-pramuka-dark">Jumlah / Total Nilai:</span>
+                <span id="nilai-total-display" class="text-2xl font-black text-pramuka-gold">0</span>
+              </div>
+
+              <button type="submit" class="w-full py-3 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-floppy-disk text-amber-400"></i> Simpan Nilai ke Spreadsheet
+              </button>
+            </form>
+          </div>
+
+          <!-- IMPOR DARI EXCEL & DAFTAR NILAI -->
+          <div class="lg:col-span-7 space-y-6">
+            <!-- BOX IMPOR EXCEL -->
+            <div class="bg-white p-6 rounded-2xl shadow border-t-4 border-emerald-600 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 class="font-extrabold text-stone-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Impor Nilai dari File Excel (.xlsx)
+                  </h2>
+                  <p class="text-xs text-stone-500">Unggah rekap nilai dari luar, sistem otomatis menjumlahkan dan menyimpan ke database.</p>
+                </div>
+                <button type="button" onclick="downloadTemplateExcel()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-download"></i> Download Template Excel
+                </button>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-center gap-3 bg-stone-50 p-3.5 rounded-xl border border-dashed border-stone-300">
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls" onchange="handleExcelUpload(event)"
+                  class="text-xs text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pramuka-dark file:text-white hover:file:bg-pramuka-primary cursor-pointer flex-1" />
+                <button type="button" id="btn-save-excel-batch" onclick="submitExcelBatch()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow shrink-0">
+                  <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Simpan Semua (<span id="excel-row-count">0</span> Baris)
+                </button>
+              </div>
+
+              <!-- PREVIEW EXCEL SEBELUM DISIMPAN -->
+              <div id="excel-preview-box" class="hidden overflow-x-auto max-h-44 border rounded-xl">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-emerald-700 text-white">
+                    <tr>
+                      <th class="p-2">No. Peserta</th>
+                      <th class="p-2">Nama Regu (Auto)</th>
+                      <th class="p-2">Nama Lomba</th>
+                      <th class="p-2">Juri 1</th>
+                      <th class="p-2">Juri 2</th>
+                      <th class="p-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="excel-preview-tbody" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TABEL HASIL PENILAIAN TERKINI -->
+            <div class="bg-white p-6 rounded-2xl shadow space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="font-bold text-pramuka-dark text-sm">Data Penilaian Tersimpan</h3>
+                <input type="text" id="search-nilai" onkeyup="renderPenilaianTable()" placeholder="Filter regu / lomba..."
+                  class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
+              </div>
+              <div class="overflow-x-auto max-h-80">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-pramuka-light text-pramuka-dark font-bold uppercase sticky top-0">
+                    <tr>
+                      <th class="p-2.5">No. Peserta</th>
+                      <th class="p-2.5">Nama Regu</th>
+                      <th class="p-2.5">Mata Lomba</th>
+                      <th class="p-2.5 text-center">Juri 1</th>
+                      <th class="p-2.5 text-center">Juri 2</th>
+                      <th class="p-2.5 text-center">Total</th>
+                      <th class="p-2.5 text-center admin-only">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-penilaian" class="divide-y divide-stone-200"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 4: DATA PESERTA & CETAK KARTU BARCODE (ADMIN)     -->
+      <!-- ===================================================== -->
+      <div id="tab-peserta" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- FORM TAMBAH / EDIT PESERTA -->
+          <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-gold h-fit space-y-4">
+            <h2 id="form-peserta-title" class="font-extrabold text-pramuka-dark text-base border-b pb-2">
+              <i class="fa-solid fa-user-plus text-pramuka-gold mr-1"></i> Input Data Peserta
+            </h2>
+            <form id="form-peserta" class="space-y-3.5">
+              <input type="hidden" id="peserta-is-edit" value="false" />
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta (Barcode ID) *</label>
+                <input type="text" id="peserta-nomor" required placeholder="Contoh: LT3-001"
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor / Nama Kwarran *</label>
+                <input type="text" id="peserta-kwarran" required placeholder="Contoh: 01 - Balaraja / Kwarran Tigaraksa"
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Gudep *</label>
+                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01.001 - 01.002"
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Regu *</label>
+                <input type="text" id="peserta-regu" required placeholder="Contoh: Regu Harimau / Regu Melati"
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button type="submit" class="flex-1 py-2.5 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-sm shadow">
+                  Simpan Peserta
+                </button>
+                <button type="button" onclick="resetFormPeserta()" class="px-3.5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-xl text-sm">
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- TABEL DATA PESERTA -->
+          <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+              <div>
+                <h2 class="font-extrabold text-pramuka-dark text-base">Master Data Peserta LT III</h2>
+                <p class="text-xs text-stone-500">Tersimpan di sheet <code class="font-bold">DATA PESERTA</code>. Klik ikon kartu untuk melihat/mencetak ID Barcode.</p>
+              </div>
+              <input type="text" id="search-peserta" onkeyup="renderPesertaTable()" placeholder="Cari nomor / regu / kwarran..."
+                class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
+            </div>
+
+            <div class="overflow-x-auto max-h-[500px]">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-pramuka-dark text-white uppercase sticky top-0">
+                  <tr>
+                    <th class="p-3">No. Peserta</th>
+                    <th class="p-3">Nama Regu</th>
+                    <th class="p-3">Kwarran</th>
+                    <th class="p-3">No. Gudep</th>
+                    <th class="p-3 text-center">Kartu ID</th>
+                    <th class="p-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-peserta" class="divide-y divide-stone-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 5: DATA USER (ADMIN & JURI/PANITIA)               -->
+      <!-- ===================================================== -->
+      <div id="tab-users" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-primary h-fit space-y-4">
+            <h2 id="form-user-title" class="font-extrabold text-pramuka-dark text-base border-b pb-2">
+              <i class="fa-solid fa-user-gear text-pramuka-gold mr-1"></i> Input Data User
+            </h2>
+            <form id="form-user" class="space-y-3.5">
+              <input type="hidden" id="user-is-edit" value="false" />
+              <input type="hidden" id="user-nomor" value="" />
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Pengguna (Login) *</label>
+                <input type="text" id="user-nama" required placeholder="Contoh: Juri Pionering / Panitia 1"
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Password *</label>
+                <input type="text" id="user-password" required placeholder="Masukkan password..."
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Role / Hak Akses *</label>
+                <select id="user-role" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-pramuka-gold outline-none">
+                  <option value="User">User (Juri / Petugas Scan)</option>
+                  <option value="Admin">Admin (Akses Penuh)</option>
+                </select>
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button type="submit" class="flex-1 py-2.5 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-sm shadow">
+                  Simpan User
+                </button>
+                <button type="button" onclick="resetFormUser()" class="px-3.5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-xl text-sm">
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow space-y-4">
+            <h2 class="font-extrabold text-pramuka-dark text-base border-b pb-3">Daftar Akun Pengguna (Sheet: DATA USER)</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-pramuka-dark text-white uppercase">
+                  <tr>
+                    <th class="p-3">No</th>
+                    <th class="p-3">Nama</th>
+                    <th class="p-3">Password</th>
+                    <th class="p-3">Role</th>
+                    <th class="p-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-users" class="divide-y divide-stone-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 6: LAPORAN HASIL & CETAK PDF                      -->
+      <!-- ===================================================== -->
+      <div id="tab-laporan" class="tab-content hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+            <div>
+              <h2 class="font-extrabold text-pramuka-dark text-lg">Laporan Hasil Penilaian LT III Kwarcab Tangerang 2026</h2>
+              <p class="text-xs text-stone-500">Filter berdasarkan mata lomba atau cetak rekap akumulasi nilai tertinggi.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="filter-laporan-lomba" onchange="renderLaporanTable()" class="px-3.5 py-2 border border-stone-300 rounded-xl text-xs font-bold outline-none">
+                <option value="ALL">Semua Mata Lomba (Rincian)</option>
+                <option value="REKAP_REGU">Rekap Total Nilai Per Regu (Peringkat)</option>
+              </select>
+              <button onclick="exportLaporanPDF()" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-xs shadow flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf"></i> Cetak / Download PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- PREVIEW KOP & TABEL LAPORAN -->
+          <div class="border border-stone-200 rounded-xl p-6 bg-stone-50/50 space-y-5">
+            <div class="flex items-center justify-center gap-4 border-b-2 border-stone-800 pb-4 text-center">
+              <img id="laporan-preview-logo" src="" alt="Logo" class="w-16 h-16 object-contain hidden" />
+              <div>
+                <h3 class="font-extrabold text-sm md:text-base uppercase text-stone-900">
+                  GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG
+                </h3>
+                <p class="font-bold text-xs md:text-sm text-pramuka-dark uppercase">
+                  PANITIA LOMBA TINGKAT REGU PENGGALANG TIGA (LT III) TAHUN 2026
+                </p>
+                <p class="text-[11px] text-stone-600 mt-0.5" id="laporan-subjudul">Laporan Hasil Penilaian Seluruh Mata Lomba</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-lg border">
+              <table class="w-full text-left text-xs">
+                <thead id="thead-laporan" class="bg-pramuka-dark text-white uppercase"></thead>
+                <tbody id="tbody-laporan" class="divide-y divide-stone-200"></tbody>
+              </table>
+            </div>
+
+            <!-- PREVIEW TANDA TANGAN -->
+            <div class="grid grid-cols-2 gap-8 pt-6 text-center text-xs">
+              <div>
+                <p class="mb-1">Mengetahui,</p>
+                <p class="font-bold" id="prev-jabatan-ketua">Ketua Panitia Pelaksana</p>
+                <div class="h-16"></div>
+                <p class="font-extrabold underline" id="prev-nama-ketua">Nama Ketua Panitia</p>
+              </div>
+              <div>
+                <p class="mb-1" id="prev-tempat-tanggal">Tangerang, Oktober 2026</p>
+                <p class="font-bold" id="prev-jabatan-juri">Koordinator Dewan Juri</p>
+                <div class="h-16"></div>
+                <p class="font-extrabold underline" id="prev-nama-juri">Nama Koordinator Juri</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 7: PENGATURAN LOGO & PENGESAHAN LAPORAN (ADMIN)   -->
+      <!-- ===================================================== -->
+      <div id="tab-pengaturan" class="tab-content hidden max-w-3xl mx-auto">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow border-t-4 border-pramuka-gold space-y-6">
+          <h2 class="font-extrabold text-pramuka-dark text-lg border-b pb-3 flex items-center gap-2">
+            <i class="fa-solid fa-stamp text-pramuka-gold"></i> Pengaturan Logo Kegiatan & Tanda Tangan Laporan
+          </h2>
+
+          <form id="form-pengaturan" class="space-y-5">
+            <!-- UPLOAD LOGO -->
+            <div class="bg-pramuka-light/60 p-4 rounded-xl border border-pramuka-khaki flex flex-col sm:flex-row items-center gap-5">
+              <div class="w-24 h-24 rounded-xl bg-white border-2 border-dashed border-stone-300 flex items-center justify-center overflow-hidden shrink-0">
+                <img id="setting-logo-preview" src="" alt="Preview Logo" class="w-full h-full object-contain hidden p-1" />
+                <i id="setting-logo-placeholder" class="fa-solid fa-image text-3xl text-stone-300"></i>
+              </div>
+              <div class="flex-1 space-y-2">
+                <label class="block text-xs font-bold uppercase text-pramuka-dark">Logo Kegiatan LT III / Kwarcab Tangerang</label>
+                <input type="file" id="setting-logo-file" accept="image/*" onchange="handleLogoUpload(event)"
+                  class="text-xs text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pramuka-dark file:text-white cursor-pointer" />
+                <p class="text-[11px] text-stone-500">Logo akan muncul di halaman Login, Header Aplikasi, Kartu ID Peserta, dan Kop Surat Laporan PDF.</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-stone-600 mb-1">Tempat & Tanggal Pengesahan Laporan</label>
+              <input type="text" id="set-tempat-tanggal" placeholder="Contoh: Tangerang, 25 Oktober 2026"
+                class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm outline-none focus:border-pramuka-gold" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div class="p-4 rounded-xl border bg-stone-50 space-y-3">
+                <h3 class="text-xs font-extrabold uppercase text-pramuka-primary">Penanda Tangan 1 (Ketua Panitia)</h3>
+                <div>
+                  <label class="block text-[11px] font-bold text-stone-500 mb-1">Jabatan</label>
+                  <input type="text" id="set-jabatan-ketua" value="Ketua Panitia Pelaksana"
+                    class="w-full px-3 py-2 border rounded-lg text-xs bg-white" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-stone-500 mb-1">Nama Lengkap & Gelar</label>
+                  <input type="text" id="set-nama-ketua" placeholder="Nama Ketua Panitia..."
+                    class="w-full px-3 py-2 border rounded-lg text-xs font-bold bg-white" />
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl border bg-stone-50 space-y-3">
+                <h3 class="text-xs font-extrabold uppercase text-pramuka-primary">Penanda Tangan 2 (Juri)</h3>
+                <div>
+                  <label class="block text-[11px] font-bold text-stone-500 mb-1">Jabatan</label>
+                  <input type="text" id="set-jabatan-juri" value="Koordinator Dewan Juri"
+                    class="w-full px-3 py-2 border rounded-lg text-xs bg-white" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-stone-500 mb-1">Nama Lengkap & Gelar</label>
+                  <input type="text" id="set-nama-juri" placeholder="Nama Koordinator / Dewan Juri..."
+                    class="w-full px-3 py-2 border rounded-lg text-xs font-bold bg-white" />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2">
+              <i class="fa-solid fa-floppy-disk text-amber-400"></i> Simpan Pengaturan Logo & Tanda Tangan
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL POPUP: KARTU ID PESERTA (HASIL SCAN / CETAK ID)     -->
+  <!-- ========================================================= -->
+  <div id="modal-id-card" class="fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4 backdrop-blur-xs">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-4 border-pramuka-gold animate-bounce-once">
+      <!-- AREA YANG BISA DICETAK -->
+      <div id="print-area" class="bg-gradient-to-b from-pramuka-dark via-pramuka-primary to-stone-800 text-white p-6 text-center relative">
+        <div class="flex items-center justify-center gap-2.5 mb-3 border-b border-amber-500/40 pb-3">
+          <img id="card-logo-img" src="" alt="Logo" class="w-10 h-10 object-contain bg-white rounded-lg p-0.5 hidden" />
+          <div class="text-left">
+            <p class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider leading-tight">LT III Kwarcab Tangerang</p>
+            <p class="text-[9px] text-stone-200 uppercase">Tahun 2026 • Kartu Identitas Regu</p>
+          </div>
+        </div>
+
+        <div id="card-status-badge" class="inline-block px-3 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-extrabold uppercase tracking-wider mb-3 shadow">
+          <i class="fa-solid fa-circle-check mr-1"></i> TERDAFTAR ULANG
+        </div>
+
+        <div class="bg-white text-stone-900 rounded-2xl p-4 shadow-inner space-y-2">
+          <p class="text-[10px] font-bold text-stone-400 uppercase">Nomor Peserta</p>
+          <h3 id="card-no-peserta" class="text-2xl font-black text-pramuka-dark tracking-wider">LT3-001</h3>
+
+          <div class="border-t border-b border-stone-200 py-2.5 my-2">
+            <p class="text-[10px] font-bold text-stone-400 uppercase">Nama Regu</p>
+            <h4 id="card-nama-regu" class="text-lg font-extrabold text-pramuka-primary uppercase">REGU HARIMAU</h4>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-left text-xs pt-1">
+            <div class="bg-stone-100 p-2 rounded-lg">
+              <span class="block text-[9px] font-bold text-stone-400 uppercase">Kwarran</span>
+              <span id="card-kwarran" class="font-bold text-stone-800">-</span>
+            </div>
+            <div class="bg-stone-100 p-2 rounded-lg">
+              <span class="block text-[9px] font-bold text-stone-400 uppercase">No. Gudep</span>
+              <span id="card-gudep" class="font-bold text-stone-800">-</span>
+            </div>
+          </div>
+
+          <!-- BARCODE RENDER -->
+          <div class="pt-2 flex flex-col items-center">
+            <svg id="card-barcode-svg" class="max-w-full h-14"></svg>
+          </div>
+        </div>
+
+        <p id="card-timestamp" class="text-[10px] text-amber-200 mt-3 font-medium">Waktu Hadir: -</p>
+      </div>
+
+      <div class="p-4 bg-stone-100 flex gap-2">
+        <button onclick="window.print()" class="flex-1 py-2.5 bg-pramuka-primary hover:bg-pramuka-dark text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-print"></i> Cetak Kartu
+        </button>
+        <button onclick="closeIdCardModal()" class="flex-1 py-2.5 bg-stone-300 hover:bg-stone-400 text-stone-800 font-bold rounded-xl text-xs">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT APPLICATION LOGIC                              -->
+  <!-- ========================================================= -->
+  <script>
+    // STATE GLOBAL APLIKASI
+    let APP_DATA = {
+      users: [],
+      peserta: [],
+      daftarUlang: [],
+      penilaian: [],
+      settings: {}
+    };
+    let CURRENT_USER = null;
+    let html5QrCode = null;
+    let currentFacingMode = "environment";
+    let isScanningLocked = false;
+    let excelBatchBuffer = [];
+
+    // =========================================================
+    // INISIALISASI SAAT HALAMAN DIMUAT
+    // =========================================================
+    window.addEventListener('DOMContentLoaded', async () => {
+      const savedUser = sessionStorage.getItem('lt3_user');
+      await syncAllData(false);
+
+      if (savedUser) {
+        CURRENT_USER = JSON.parse(savedUser);
+        enterAppShell();
+      }
+    });
+
+    function showLoader(text = "Memproses data...") {
+      document.getElementById('loader-text').textContent = text;
+      document.getElementById('global-loader').classList.remove('hidden');
+      document.getElementById('global-loader').classList.add('flex');
+    }
+
+    function hideLoader() {
+      document.getElementById('global-loader').classList.add('hidden');
+      document.getElementById('global-loader').classList.remove('flex');
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      const msgEl = document.getElementById('toast-msg');
+
+      toast.className = "fixed top-5 right-5 z-50 transform transition-all duration-300 max-w-sm w-full shadow-xl rounded-xl p-4 text-white flex items-center gap-3 ";
+      if (type === 'success') {
+        toast.classList.add('bg-emerald-700');
+        icon.className = 'fa-solid fa-circle-check text-xl';
+      } else if (type === 'warning') {
+        toast.classList.add('bg-amber-600');
+        icon.className = 'fa-solid fa-triangle-exclamation text-xl';
+      } else {
+        toast.classList.add('bg-red-700');
+        icon.className = 'fa-solid fa-circle-xmark text-xl';
+      }
+
+      msgEl.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3800);
+    }
+
+    // =========================================================
+    // KOMUNIKASI API GOOGLE APPS SCRIPT
+    // =========================================================
+    async function apiCall(payload) {
+      if (API_URL.includes("GANTI_DENGAN_ID")) {
+        showToast("Harap masukkan URL Web App Apps Script pada variabel API_URL di kode HTML!", "error");
+        throw new Error("API_URL belum dikonfigurasi");
+      }
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      return await response.json();
+    }
+
+    async function syncAllData(showNotif = false) {
+      showLoader("Mengambil data dari Google Sheets...");
+      try {
+        const res = await apiCall({ action: 'getAllData' });
+        if (res.status === 'success') {
+          APP_DATA.users = res.users || [];
+          APP_DATA.peserta = res.peserta || [];
+          APP_DATA.daftarUlang = res.daftarUlang || [];
+          APP_DATA.penilaian = res.penilaian || [];
+          APP_DATA.settings = res.settings || {};
+
+          applySettingsToUI();
+          refreshAllViews();
+          if (showNotif) showToast("Data berhasil disinkronkan!");
+        } else {
+          showToast(res.message || "Gagal memuat data", "error");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // =========================================================
+    // SISTEM LOGIN & LOGOUT
+    // =========================================================
+    function togglePassVisibility() {
+      const inp = document.getElementById('login-password');
+      const eye = document.getElementById('eye-icon');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        eye.className = 'fa-solid fa-eye-slash';
+      } else {
+        inp.type = 'password';
+        eye.className = 'fa-solid fa-eye';
+      }
+    }
+
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nama = document.getElementById('login-nama').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+
+      showLoader("Memverifikasi akun...");
+      try {
+        const res = await apiCall({ action: 'login', nama, password });
+        if (res.status === 'success') {
+          CURRENT_USER = res.user;
+          sessionStorage.setItem('lt3_user', JSON.stringify(CURRENT_USER));
+          showToast(`Selamat datang, ${CURRENT_USER.nama}!`);
+          enterAppShell();
+        } else {
+          showToast(res.message || "Login gagal!", "error");
+        }
+      } catch (err) {
+        showToast("Gagal terhubung ke server", "error");
+      } finally {
+        hideLoader();
+      }
+    });
+
+    function enterAppShell() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-shell').classList.remove('hidden');
+
+      document.getElementById('user-display-name').textContent = CURRENT_USER.nama;
+      document.getElementById('user-display-role').textContent = CURRENT_USER.role;
+
+      const isAdmin = String(CURRENT_USER.role).toLowerCase() === 'admin';
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+
+      refreshAllViews();
+      switchTab(isAdmin ? 'dashboard' : 'scan');
+    }
+
+    function logout() {
+      stopCameraScanner();
+      sessionStorage.removeItem('lt3_user');
+      CURRENT_USER = null;
+      document.getElementById('app-shell').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-password').value = '';
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-pramuka-gold', 'text-white', 'shadow');
+        btn.classList.add('text-stone-200', 'hover:bg-pramuka-dark/50');
+      });
+
+      const target = document.getElementById(`tab-${tabName}`);
+      if (target) target.classList.remove('hidden');
+
+      const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-stone-200', 'hover:bg-pramuka-dark/50');
+        activeBtn.classList.add('bg-pramuka-gold', 'text-white', 'shadow');
+      }
+
+      if (tabName === 'scan') {
+        setTimeout(() => document.getElementById('scan-input-code').focus(), 200);
+      } else {
+        stopCameraScanner();
+      }
+    }
+
+    // =========================================================
+    // AUDIO BEEP & TEXT-TO-SPEECH (BAHASA INDONESIA)
+    // =========================================================
+    function playBeep(type = 'success') {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'success') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.28);
+        } else {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        }
+      } catch (e) {}
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 1.0;
+        utterance.pitch = 1.05;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // =========================================================
+    // FITUR SCAN DAFTAR ULANG (KAMERA + BARCODE USB)
+    // =========================================================
+    document.getElementById('form-manual-scan').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('scan-input-code');
+      const code = input.value.trim();
+      if (code) {
+        input.value = '';
+        processScannedCode(code);
+      }
+    });
+
+    async function startCameraScanner() {
+      try {
+        if (html5QrCode) await stopCameraScanner();
+        html5QrCode = new Html5Qrcode("reader");
+
+        document.getElementById('btn-start-cam').classList.add('hidden');
+        document.getElementById('btn-switch-cam').classList.remove('hidden');
+        document.getElementById('btn-stop-cam').classList.remove('hidden');
+
+        await html5QrCode.start(
+          { facingMode: currentFacingMode },
+          { fps: 10, qrbox: { width: 240, height: 150 } },
+          (decodedText) => {
+            if (!isScanningLocked) {
+              isScanningLocked = true;
+              processScannedCode(decodedText);
+              setTimeout(() => { isScanningLocked = false; }, 3500);
+            }
+          },
+          () => {}
+        );
+      } catch (err) {
+        showToast("Gagal mengakses kamera. Pastikan izin kamera diberikan.", "error");
+        resetCameraButtons();
+      }
+    }
+
+    async function switchCameraFacing() {
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      await startCameraScanner();
+    }
+
+    async function stopCameraScanner() {
+      if (html5QrCode) {
+        try {
+          await html5QrCode.stop();
+          html5QrCode.clear();
+        } catch (e) {}
+        html5QrCode = null;
+      }
+      resetCameraButtons();
+    }
+
+    function resetCameraButtons() {
+      document.getElementById('btn-start-cam').classList.remove('hidden');
+      document.getElementById('btn-switch-cam').classList.add('hidden');
+      document.getElementById('btn-stop-cam').classList.add('hidden');
+    }
+
+    async function processScannedCode(rawCode) {
+      const code = String(rawCode).trim();
+      showLoader(`Memverifikasi Nomor Peserta: ${code}...`);
+
+      try {
+        const res = await apiCall({
+          action: 'scanDaftarUlang',
+          nomorPeserta: code,
+          petugas: CURRENT_USER ? CURRENT_USER.nama : 'Panitia'
+        });
+
+        hideLoader();
+
+        if (res.status === 'success') {
+          playBeep('success');
+          const p = res.peserta;
+          const kalimat = `Selamat datang, ${p['Nama Regu']}, dari Kwarran ${p['Nomor Kwarran']}, berhasil daftar ulang.`;
+          speakText(kalimat);
+          showToast(kalimat, 'success');
+
+          // Tampilkan Kartu ID Digital
+          openIdCardModal(p, res.timestamp, "TERDAFTAR ULANG");
+
+          // Update state lokal & tabel
+          APP_DATA.daftarUlang.push({
+            'Timestamp': res.timestamp,
+            'Nomor Peserta': p['Nomor Peserta'],
+            'Nomor Kwarran': p['Nomor Kwarran'],
+            'Nomor Gudep': p['Nomor Gudep'],
+            'Nama Regu': p['Nama Regu'],
+            'Status': 'Hadir',
+            'Petugas Scan': CURRENT_USER.nama
+          });
+          refreshAllViews();
+
+        } else if (res.status === 'duplicate') {
+          playBeep('error');
+          speakText(`Perhatian! ${res.peserta['Nama Regu']} sudah melakukan daftar ulang sebelumnya.`);
+          showToast(res.message, 'warning');
+          openIdCardModal(res.peserta, res.waktuSebelumnya, "SUDAH DAFTAR ULANG SEBELUMNYA");
+
+        } else {
+          playBeep('error');
+          speakText("Nomor peserta tidak ditemukan.");
+          showToast(res.message || "Nomor peserta tidak terdaftar!", 'error');
+        }
+      } catch (err) {
+        hideLoader();
+        showToast("Gagal memproses scan ke server", "error");
+      } finally {
+        document.getElementById('scan-input-code').focus();
+      }
+    }
+
+    // =========================================================
+    // KARTU ID DIGITAL MODAL & BARCODE GENERATOR
+    // =========================================================
+    function openIdCardModal(peserta, timestamp = null, badgeText = "KARTU PESERTA LT III") {
+      document.getElementById('card-no-peserta').textContent = peserta['Nomor Peserta'];
+      document.getElementById('card-nama-regu').textContent = peserta['Nama Regu'];
+      document.getElementById('card-kwarran').textContent = peserta['Nomor Kwarran'];
+      document.getElementById('card-gudep').textContent = peserta['Nomor Gudep'];
+      document.getElementById('card-status-badge').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${badgeText}`;
+      document.getElementById('card-timestamp').textContent = timestamp ? `Waktu Daftar Ulang: ${timestamp}` : 'LT III Kwarcab Tangerang Tahun 2026';
+
+      try {
+        JsBarcode("#card-barcode-svg", String(peserta['Nomor Peserta']), {
+          format: "CODE128",
+          lineColor: "#1c1917",
+          width: 2,
+          height: 45,
+          displayValue: true,
+          fontSize: 12
+        });
+      } catch (e) {}
+
+      const modal = document.getElementById('modal-id-card');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeIdCardModal() {
+      const modal = document.getElementById('modal-id-card');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('scan-input-code').focus();
+    }
+
+    // =========================================================
+    // PENILAIAN (MANUAL + KALKULASI OTOMATIS + IMPOR EXCEL)
+    // =========================================================
+    function autoFillPesertaNilai() {
+      const no = document.getElementById('nilai-no-peserta').value.trim();
+      const found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === no.toLowerCase());
+      if (found) {
+        document.getElementById('nilai-nama-regu').value = found['Nama Regu'];
+        document.getElementById('nilai-kwarran').value = found['Nomor Kwarran'];
+      } else {
+        document.getElementById('nilai-nama-regu').value = '';
+        document.getElementById('nilai-kwarran').value = '';
+      }
+    }
+
+    function hitungTotalNilai() {
+      const j1 = parseFloat(document.getElementById('nilai-juri-1').value) || 0;
+      const j2 = parseFloat(document.getElementById('nilai-juri-2').value) || 0;
+      const total = j1 + j2;
+      document.getElementById('nilai-total-display').textContent = Number.isInteger(total) ? total : total.toFixed(2);
+    }
+
+    document.getElementById('form-penilaian').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const noPeserta = document.getElementById('nilai-no-peserta').value.trim();
+      const namaRegu = document.getElementById('nilai-nama-regu').value.trim() || 'Peserta Umum';
+      const kwarran = document.getElementById('nilai-kwarran').value.trim() || '-';
+      const namaLomba = document.getElementById('nilai-nama-lomba').value.trim();
+      const j1 = parseFloat(document.getElementById('nilai-juri-1').value) || 0;
+      const j2 = parseFloat(document.getElementById('nilai-juri-2').value) || 0;
+
+      showLoader("Menyimpan nilai ke Google Sheets...");
+      try {
+        const res = await apiCall({
+          action: 'savePenilaian',
+          data: {
+            nomorPeserta: noPeserta,
+            namaRegu: namaRegu,
+            nomorKwarran: kwarran,
+            namaLomba: namaLomba,
+            nilaiJuri1: j1,
+            nilaiJuri2: j2,
+            penginput: CURRENT_USER.nama
+          }
+        });
+
+        if (res.status === 'success') {
+          showToast(res.message);
+          document.getElementById('nilai-no-peserta').value = '';
+          document.getElementById('nilai-nama-regu').value = '';
+          document.getElementById('nilai-kwarran').value = '';
+          document.getElementById('nilai-juri-1').value = '';
+          document.getElementById('nilai-juri-2').value = '';
+          document.getElementById('nilai-total-display').textContent = '0';
+          await syncAllData(false);
+        } else {
+          showToast(res.message, 'error');
+        }
+      } catch (err) {
+        showToast("Gagal menyimpan nilai", 'error');
+      } finally {
+        hideLoader();
+      }
+    });
+
+    // DOWNLOAD TEMPLATE EXCEL
+    function downloadTemplateExcel() {
+      const sampleData = [
+        { "Nomor Peserta": "LT3-001", "Nama Lomba": "Pionering", "Nilai Juri 1": 85, "Nilai Juri 2": 88 },
+        { "Nomor Peserta": "LT3-002", "Nama Lomba": "Pionering", "Nilai Juri 1": 90, "Nilai Juri 2": 87 }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template_Nilai");
+      XLSX.writeFile(wb, "Template_Impor_Penilaian_LT3_2026.xlsx");
+    }
+
+    // BACA FILE EXCEL YANG DIUNGGAH
+    function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonRows = XLSX.utils.sheet_to_json(firstSheet);
+
+        excelBatchBuffer = [];
+        const previewTbody = document.getElementById('excel-preview-tbody');
+        previewTbody.innerHTML = '';
+
+        jsonRows.forEach(row => {
+          const no = row['Nomor Peserta'] || row['nomor_peserta'] || row['No Peserta'] || '';
+          const lomba = row['Nama Lomba'] || row['nama_lomba'] || row['Lomba'] || '';
+          const j1 = parseFloat(row['Nilai Juri 1'] || row['Juri 1'] || 0) || 0;
+          const j2 = parseFloat(row['Nilai Juri 2'] || row['Juri 2'] || 0) || 0;
+
+          if (String(no).trim() !== '' && String(lomba).trim() !== '') {
+            const foundPeserta = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim() === String(no).trim());
+            const namaRegu = foundPeserta ? foundPeserta['Nama Regu'] : '(Tidak terdaftar)';
+            const total = j1 + j2;
+
+            excelBatchBuffer.push({
+              nomorPeserta: String(no).trim(),
+              namaLomba: String(lomba).trim(),
+              nilaiJuri1: j1,
+              nilaiJuri2: j2
+            });
+
+            previewTbody.innerHTML += `
+              <tr>
+                <td class="p-2 font-bold">${no}</td>
+                <td class="p-2">${namaRegu}</td>
+                <td class="p-2">${lomba}</td>
+                <td class="p-2">${j1}</td>
+                <td class="p-2">${j2}</td>
+                <td class="p-2 font-extrabold text-emerald-700">${total}</td>
+              </tr>
+            `;
+          }
+        });
+
+        if (excelBatchBuffer.length > 0) {
+          document.getElementById('excel-row-count').textContent = excelBatchBuffer.length;
+          document.getElementById('btn-save-excel-batch').classList.remove('hidden');
+          document.getElementById('excel-preview-box').classList.remove('hidden');
+          showToast(`${excelBatchBuffer.length} baris nilai siap disimpan!`);
+        } else {
+          showToast("Format kolom Excel tidak sesuai template!", "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function submitExcelBatch() {
+      if (excelBatchBuffer.length === 0) return;
+      showLoader(`Mengimpor ${excelBatchBuffer.length} data penilaian ke Google Sheets...`);
+      try {
+        const res = await apiCall({
+          action: 'importPenilaianBatch',
+          rows: excelBatchBuffer,
+          penginput: CURRENT_USER.nama
+        });
+
+        if (res.status === 'success') {
+          showToast(res.message);
+          excelBatchBuffer = [];
+          document.getElementById('excel-file-input').value = '';
+          document.getElementById('btn-save-excel-batch').classList.add('hidden');
+          document.getElementById('excel-preview-box').classList.add('hidden');
+          await syncAllData(false);
+        } else {
+          showToast(res.message, 'error');
+        }
+      } catch (err) {
+        showToast("Gagal mengimpor file Excel", 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    async function deletePenilaian(rowIndex) {
+      if (!confirm("Hapus baris nilai ini dari database?")) return;
+      showLoader("Menghapus data nilai...");
+      try {
+        const res = await apiCall({ action: 'deletePenilaian', rowIndex });
+        if (res.status === 'success') {
+          showToast("Data nilai dihapus");
+          await syncAllData(false);
+        }
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // =========================================================
+    // CRUD DATA PESERTA
+    // =========================================================
+    document.getElementById('form-peserta').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const isEdit = document.getElementById('peserta-is-edit').value === 'true';
+      const data = {
+        isEdit,
+        nomorPeserta: document.getElementById('peserta-nomor').value.trim(),
+        nomorKwarran: document.getElementById('peserta-kwarran').value.trim(),
+        nomorGudep: document.getElementById('peserta-gudep').value.trim(),
+        namaRegu: document.getElementById('peserta-regu').value.trim()
+      };
+
+      showLoader("Menyimpan data peserta...");
+      try {
+        const res = await apiCall({ action: 'savePeserta', data });
+        if (res.status === 'success') {
+          showToast(res.message);
+          resetFormPeserta();
+          await syncAllData(false);
+        } else {
+          showToast(res.message, 'error');
+        }
+      } finally {
+        hideLoader();
+      }
+    });
+
+    function editPeserta(noPeserta) {
+      const p = APP_DATA.peserta.find(item => String(item['Nomor Peserta']) === String(noPeserta));
+      if (!p) return;
+      document.getElementById('peserta-is-edit').value = 'true';
+      document.getElementById('peserta-nomor').value = p['Nomor Peserta'];
+      document.getElementById('peserta-nomor').readOnly = true;
+      document.getElementById('peserta-kwarran').value = p['Nomor Kwarran'];
+      document.getElementById('peserta-gudep').value = p['Nomor Gudep'];
+      document.getElementById('peserta-regu').value = p['Nama Regu'];
+      document.getElementById('form-peserta-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600 mr-1"></i> Edit Peserta (${p['Nomor Peserta']})`;
+    }
+
+    function resetFormPeserta() {
+      document.getElementById('form-peserta').reset();
+      document.getElementById('peserta-is-edit').value = 'false';
+      document.getElementById('peserta-nomor').readOnly = false;
+      document.getElementById('form-peserta-title').innerHTML = `<i class="fa-solid fa-user-plus text-pramuka-gold mr-1"></i> Input Data Peserta`;
+    }
+
+    async function deletePeserta(nomorPeserta) {
+      if (!confirm(`Hapus peserta ${nomorPeserta}?`)) return;
+      showLoader("Menghapus peserta...");
+      try {
+        const res = await apiCall({ action: 'deletePeserta', nomorPeserta });
+        if (res.status === 'success') {
+          showToast("Peserta dihapus");
+          await syncAllData(false);
+        }
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // =========================================================
+    // CRUD DATA USER
+    // =========================================================
+    document.getElementById('form-user').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const isEdit = document.getElementById('user-is-edit').value === 'true';
+      const data = {
+        isEdit,
+        nomor: document.getElementById('user-nomor').value,
+        nama: document.getElementById('user-nama').value.trim(),
+        password: document.getElementById('user-password').value.trim(),
+        role: document.getElementById('user-role').value
+      };
+
+      showLoader("Menyimpan data user...");
+      try {
+        const res = await apiCall({ action: 'saveUser', data });
+        if (res.status === 'success') {
+          showToast(res.message);
+          resetFormUser();
+          await syncAllData(false);
+        }
+      } finally {
+        hideLoader();
+      }
+    });
+
+    function editUser(nomor) {
+      const u = APP_DATA.users.find(item => String(item['Nomor']) === String(nomor));
+      if (!u) return;
+      document.getElementById('user-is-edit').value = 'true';
+      document.getElementById('user-nomor').value = u['Nomor'];
+      document.getElementById('user-nama').value = u['Nama'];
+      document.getElementById('user-password').value = u['Password'];
+      document.getElementById('user-role').value = u['Role'];
+      document.getElementById('form-user-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600 mr-1"></i> Edit User #${u['Nomor']}`;
+    }
+
+    function resetFormUser() {
+      document.getElementById('form-user').reset();
+      document.getElementById('user-is-edit').value = 'false';
+      document.getElementById('user-nomor').value = '';
+      document.getElementById('form-user-title').innerHTML = `<i class="fa-solid fa-user-gear text-pramuka-gold mr-1"></i> Input Data User`;
+    }
+
+    async function deleteUser(nomor) {
+      if (!confirm("Hapus user ini?")) return;
+      showLoader("Menghapus user...");
+      try {
+        const res = await apiCall({ action: 'deleteUser', nomor });
+        if (res.status === 'success') {
+          showToast("User dihapus");
+          await syncAllData(false);
+        }
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // =========================================================
+    // PENGATURAN LOGO & PENGESAHAN LAPORAN
+    // =========================================================
+    let tempLogoBase64 = "";
+
+    function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Resize gambar agar ringan disimpan di Google Sheets (< 45KB Base64)
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement('canvas');
+          const maxDim = 220;
+          let w = img.width, h = img.height;
+          if (w > h) {
+            if (w > maxDim) { h *= maxDim / w; w = maxDim; }
+          } else {
+            if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          tempLogoBase64 = canvas.toDataURL('image/png', 0.85);
+
+          document.getElementById('setting-logo-preview').src = tempLogoBase64;
+          document.getElementById('setting-logo-preview').classList.remove('hidden');
+          document.getElementById('setting-logo-placeholder').classList.add('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('form-pengaturan').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const settingsPayload = {
+        logo: tempLogoBase64 || APP_DATA.settings.logo || '',
+        tempatTanggal: document.getElementById('set-tempat-tanggal').value.trim(),
+        jabatanKetua: document.getElementById('set-jabatan-ketua').value.trim(),
+        namaKetua: document.getElementById('set-nama-ketua').value.trim(),
+        jabatanJuri: document.getElementById('set-jabatan-juri').value.trim(),
+        namaJuri: document.getElementById('set-nama-juri').value.trim()
+      };
+
+      showLoader("Menyimpan pengaturan ke Google Sheets...");
+      try {
+        const res = await apiCall({ action: 'saveSettings', settings: settingsPayload });
+        if (res.status === 'success') {
+          APP_DATA.settings = settingsPayload;
+          applySettingsToUI();
+          showToast(res.message);
+        }
+      } finally {
+        hideLoader();
+      }
+    });
+
+    function applySettingsToUI() {
+      const s = APP_DATA.settings || {};
+      const logo = s.logo || '';
+
+      const logoIds = ['login-logo-img', 'header-logo-img', 'card-logo-img', 'laporan-preview-logo', 'setting-logo-preview'];
+      logoIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (logo) {
+            el.src = logo;
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        }
+      });
+
+      if (logo) {
+        document.getElementById('login-logo-icon')?.classList.add('hidden');
+        document.getElementById('header-logo-icon')?.classList.add('hidden');
+        document.getElementById('setting-logo-placeholder')?.classList.add('hidden');
+      }
+
+      document.getElementById('set-tempat-tanggal').value = s.tempatTanggal || 'Tangerang, Oktober 2026';
+      document.getElementById('set-jabatan-ketua').value = s.jabatanKetua || 'Ketua Panitia Pelaksana';
+      document.getElementById('set-nama-ketua').value = s.namaKetua || '';
+      document.getElementById('set-jabatan-juri').value = s.jabatanJuri || 'Koordinator Dewan Juri';
+      document.getElementById('set-nama-juri').value = s.namaJuri || '';
+
+      document.getElementById('prev-tempat-tanggal').textContent = s.tempatTanggal || 'Tangerang, Oktober 2026';
+      document.getElementById('prev-jabatan-ketua').textContent = s.jabatanKetua || 'Ketua Panitia Pelaksana';
+      document.getElementById('prev-nama-ketua').textContent = s.namaKetua || '( .................................... )';
+      document.getElementById('prev-jabatan-juri').textContent = s.jabatanJuri || 'Koordinator Dewan Juri';
+      document.getElementById('prev-nama-juri').textContent = s.namaJuri || '( .................................... )';
+    }
+
+    // =========================================================
+    // RENDER SEMUA TABEL & STATISTIK
+    // =========================================================
+    function refreshAllViews() {
+      // Statistik Dashboard
+      const totalP = APP_DATA.peserta.length;
+      const totalDU = APP_DATA.daftarUlang.length;
+      document.getElementById('stat-total-peserta').textContent = totalP;
+      document.getElementById('stat-sudah-hadir').textContent = totalDU;
+      document.getElementById('stat-belum-hadir').textContent = Math.max(0, totalP - totalDU);
+      document.getElementById('stat-total-nilai').textContent = APP_DATA.penilaian.length;
+
+      // Log terbaru dashboard
+      const dashTbody = document.getElementById('dashboard-du-tbody');
+      const recentDU = [...APP_DATA.daftarUlang].reverse().slice(0, 8);
+      dashTbody.innerHTML = recentDU.length ? recentDU.map(d => `
+        <tr>
+          <td class="p-2.5 text-stone-500">${d['Timestamp']}</td>
+          <td class="p-2.5 font-bold text-pramuka-dark">${d['Nomor Peserta']}</td>
+          <td class="p-2.5 font-semibold">${d['Nama Regu']}</td>
+          <td class="p-2.5">${d['Nomor Kwarran']} / ${d['Nomor Gudep']}</td>
+          <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">${d['Status']}</span></td>
+        </tr>
+      `).join('') : `<tr><td colspan="5" class="p-4 text-center text-stone-400">Belum ada peserta daftar ulang</td></tr>`;
+
+      // Datalist Peserta pada Form Penilaian
+      const dl = document.getElementById('list-peserta-options');
+      dl.innerHTML = APP_DATA.peserta.map(p => `<option value="${p['Nomor Peserta']}">${p['Nama Regu']} - ${p['Nomor Kwarran']}</option>`).join('');
+
+      // Populate Filter Lomba pada Laporan
+      const filterSelect = document.getElementById('filter-laporan-lomba');
+      const currentVal = filterSelect.value;
+      const uniqueLomba = [...new Set(APP_DATA.penilaian.map(n => n['Nama Lomba']).filter(Boolean))];
+      filterSelect.innerHTML = `
+        <option value="ALL">Semua Mata Lomba (Rincian)</option>
+        <option value="REKAP_REGU">Rekap Total Nilai Per Regu (Peringkat Kejuaraan)</option>
+        ${uniqueLomba.map(l => `<option value="${l}">Mata Lomba: ${l}</option>`).join('')}
+      `;
+      if ([...filterSelect.options].some(o => o.value === currentVal)) filterSelect.value = currentVal;
+
+      renderDaftarUlangTable();
+      renderPenilaianTable();
+      renderPesertaTable();
+      renderUsersTable();
+      renderLaporanTable();
+    }
+
+    function renderDaftarUlangTable() {
+      const q = (document.getElementById('search-du').value || '').toLowerCase();
+      const filtered = [...APP_DATA.daftarUlang].reverse().filter(d =>
+        String(d['Nomor Peserta']).toLowerCase().includes(q) ||
+        String(d['Nama Regu']).toLowerCase().includes(q) ||
+        String(d['Nomor Kwarran']).toLowerCase().includes(q)
+      );
+      document.getElementById('tbody-daftar-ulang').innerHTML = filtered.length ? filtered.map(d => `
+        <tr class="hover:bg-stone-50">
+          <td class="p-3 text-stone-500">${d['Timestamp']}</td>
+          <td class="p-3 font-extrabold text-pramuka-dark">${d['Nomor Peserta']}</td>
+          <td class="p-3 font-bold">${d['Nama Regu']}</td>
+          <td class="p-3">${d['Nomor Kwarran']}</td>
+          <td class="p-3">${d['Nomor Gudep']}</td>
+          <td class="p-3 text-stone-500">${d['Petugas Scan']}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="6" class="p-6 text-center text-stone-400">Data daftar ulang tidak ditemukan</td></tr>`;
+    }
+
+    function renderPenilaianTable() {
+      const q = (document.getElementById('search-nilai').value || '').toLowerCase();
+      const isAdmin = CURRENT_USER && String(CURRENT_USER.role).toLowerCase() === 'admin';
+      const filtered = [...APP_DATA.penilaian].reverse().filter(n =>
+        String(n['Nomor Peserta']).toLowerCase().includes(q) ||
+        String(n['Nama Regu']).toLowerCase().includes(q) ||
+        String(n['Nama Lomba']).toLowerCase().includes(q)
+      );
+
+      document.getElementById('tbody-penilaian').innerHTML = filtered.length ? filtered.map(n => `
+        <tr class="hover:bg-stone-50">
+          <td class="p-2.5 font-bold">${n['Nomor Peserta']}</td>
+          <td class="p-2.5">${n['Nama Regu']}</td>
+          <td class="p-2.5 font-semibold text-pramuka-primary">${n['Nama Lomba']}</td>
+          <td class="p-2.5 text-center">${n['Nilai Juri 1']}</td>
+          <td class="p-2.5 text-center">${n['Nilai Juri 2']}</td>
+          <td class="p-2.5 text-center font-extrabold text-emerald-700">${n['Total Nilai']}</td>
+          <td class="p-2.5 text-center ${isAdmin ? '' : 'hidden'}">
+            <button onclick="deletePenilaian(${n._rowIndex})" class="text-red-600 hover:text-red-800 px-2 py-1" title="Hapus">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('') : `<tr><td colspan="7" class="p-6 text-center text-stone-400">Belum ada data penilaian</td></tr>`;
+    }
+
+    function renderPesertaTable() {
+      const q = (document.getElementById('search-peserta').value || '').toLowerCase();
+      const filtered = APP_DATA.peserta.filter(p =>
+        String(p['Nomor Peserta']).toLowerCase().includes(q) ||
+        String(p['Nama Regu']).toLowerCase().includes(q) ||
+        String(p['Nomor Kwarran']).toLowerCase().includes(q)
+      );
+
+      document.getElementById('tbody-peserta').innerHTML = filtered.length ? filtered.map(p => `
+        <tr class="hover:bg-stone-50">
+          <td class="p-3 font-extrabold text-pramuka-dark">${p['Nomor Peserta']}</td>
+          <td class="p-3 font-bold">${p['Nama Regu']}</td>
+          <td class="p-3">${p['Nomor Kwarran']}</td>
+          <td class="p-3">${p['Nomor Gudep']}</td>
+          <td class="p-3 text-center">
+            <button onclick='openIdCardModal(${JSON.stringify(p)}, null, "KARTU IDENTITAS PESERTA")' class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-bold text-[11px]">
+              <i class="fa-solid fa-id-card mr-1"></i> Kartu ID
+            </button>
+          </td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="editPeserta('${p['Nomor Peserta']}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deletePeserta('${p['Nomor Peserta']}')" class="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('') : `<tr><td colspan="6" class="p-6 text-center text-stone-400">Belum ada data peserta</td></tr>`;
+    }
+
+    function renderUsersTable() {
+      document.getElementById('tbody-users').innerHTML = APP_DATA.users.map(u => `
+        <tr class="hover:bg-stone-50">
+          <td class="p-3 font-bold">${u['Nomor']}</td>
+          <td class="p-3 font-bold text-pramuka-dark">${u['Nama']}</td>
+          <td class="p-3 font-mono text-stone-500">${u['Password']}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${String(u['Role']).toLowerCase() === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-stone-200 text-stone-700'}">
+              ${u['Role']}
+            </span>
+          </td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="editUser('${u['Nomor']}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteUser('${u['Nomor']}')" class="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // =========================================================
+    // LAPORAN & EXPORT PDF (jsPDF)
+    // =========================================================
+    function getLaporanDataset() {
+      const mode = document.getElementById('filter-laporan-lomba').value;
+
+      if (mode === 'REKAP_REGU') {
+        const map = {};
+        APP_DATA.penilaian.forEach(n => {
+          const no = String(n['Nomor Peserta']).trim();
+          if (!map[no]) {
+            map[no] = {
+              noPeserta: no,
+              namaRegu: n['Nama Regu'],
+              kwarran: n['Nomor Kwarran'],
+              jumlahLomba: 0,
+              akumulasiNilai: 0
+            };
+          }
+          map[no].jumlahLomba += 1;
+          map[no].akumulasiNilai += parseFloat(n['Total Nilai']) || 0;
+        });
+
+        const sorted = Object.values(map).sort((a, b) => b.akumulasiNilai - a.akumulasiNilai);
+        return {
+          subtitle: "REKAPITULASI PERINGKAT KEJUARAAN REGU",
+          headers: ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", "Jml Lomba", "Total Akumulasi"],
+          rows: sorted.map((r, idx) => [idx + 1, r.noPeserta, r.namaRegu, r.kwarran, r.jumlahLomba, r.akumulasiNilai])
+        };
+      }
+
+      const list = mode === 'ALL'
+        ? APP_DATA.penilaian
+        : APP_DATA.penilaian.filter(n => n['Nama Lomba'] === mode);
+
+      const sortedList = [...list].sort((a, b) => (parseFloat(b['Total Nilai']) || 0) - (parseFloat(a['Total Nilai']) || 0));
+
+      return {
+        subtitle: mode === 'ALL' ? "LAPORAN HASIL PENILAIAN SELURUH MATA LOMBA" : `LAPORAN HASIL PENILAIAN MATA LOMBA: ${mode.toUpperCase()}`,
+        headers: ["No", "No. Peserta", "Nama Regu", "Kwarran", "Mata Lomba", "Juri 1", "Juri 2", "Total Nilai"],
+        rows: sortedList.map((n, idx) => [
+          idx + 1,
+          n['Nomor Peserta'],
+          n['Nama Regu'],
+          n['Nomor Kwarran'],
+          n['Nama Lomba'],
+          n['Nilai Juri 1'],
+          n['Nilai Juri 2'],
+          n['Total Nilai']
+        ])
+      };
+    }
+
+    function renderLaporanTable() {
+      const dataset = getLaporanDataset();
+      document.getElementById('laporan-subjudul').textContent = dataset.subtitle;
+
+      document.getElementById('thead-laporan').innerHTML = `<tr>${dataset.headers.map(h => `<th class="p-2.5">${h}</th>`).join('')}</tr>`;
+      document.getElementById('tbody-laporan').innerHTML = dataset.rows.length
+        ? dataset.rows.map(r => `<tr>${r.map((c, i) => `<td class="p-2.5 ${i === r.length - 1 ? 'font-extrabold text-pramuka-dark' : ''}">${c}</td>`).join('')}</tr>`).join('')
+        : `<tr><td colspan="${dataset.headers.length}" class="p-6 text-center text-stone-400">Belum ada data penilaian untuk dicetak</td></tr>`;
+    }
+
+    function exportLaporanPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const s = APP_DATA.settings || {};
+      const dataset = getLaporanDataset();
+
+      // Logo di Kop Surat (jika tersedia)
+      if (s.logo && s.logo.startsWith('data:image')) {
+        try {
+          doc.addImage(s.logo, 'PNG', 15, 10, 20, 20);
+        } catch (e) {}
+      }
+
+      // Kop Surat Resmi
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG", 112, 16, { align: "center" });
+      doc.setFontSize(11);
+      doc.text("LOMBA TINGKAT REGU PENGGALANG TIGA (LT III) TAHUN 2026", 112, 22, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(dataset.subtitle, 112, 28, { align: "center" });
+
+      doc.setLineWidth(0.7);
+      doc.line(14, 33, 196, 33);
+
+      // Tabel Penilaian
+      doc.autoTable({
+        startY: 38,
+        head: [dataset.headers],
+        body: dataset.rows,
+        theme: 'grid',
+        headStyles: { fillColor: [62, 39, 35], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 8, textColor: 30 },
+        alternateRowStyles: { fillColor: [248, 246, 245] }
+      });
+
+      // Kolom Tanda Tangan Ketua Panitia & Dewan Juri
+      let finalY = doc.lastAutoTable.finalY + 15;
+      if (finalY > 245) {
+        doc.addPage();
+        finalY = 25;
+      }
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("Mengetahui,", 48, finalY, { align: "center" });
+      doc.text(s.tempatTanggal || "Tangerang, Oktober 2026", 155, finalY, { align: "center" });
+
+      doc.setFont("helvetica", "bold");
+      doc.text(s.jabatanKetua || "Ketua Panitia Pelaksana", 48, finalY + 5, { align: "center" });
+      doc.text(s.jabatanJuri || "Koordinator Dewan Juri", 155, finalY + 5, { align: "center" });
+
+      doc.text(s.namaKetua || "( .................................... )", 48, finalY + 26, { align: "center" });
+      doc.text(s.namaJuri || "( .................................... )", 155, finalY + 26, { align: "center" });
+
+      doc.save(`Laporan_LT3_Kwarcab_Tangerang_2026.pdf`);
+    }
+  </script>
+</body>
+</html>
