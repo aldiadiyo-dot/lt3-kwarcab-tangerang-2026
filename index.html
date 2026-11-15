@@ -408,9 +408,9 @@
             <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3 mb-4">
               <div>
                 <h2 class="font-extrabold text-pramuka-dark text-base">Data Peserta Sudah Daftar Ulang</h2>
-                <p class="text-xs text-stone-500">Otomatis tersimpan ke Google Sheets (Sheet: <code class="font-bold">DAFTAR ULANG</code>)</p>
+                <p class="text-xs text-stone-500">Nomor Peserta otomatis di-generate (<code class="font-bold">A-001</code> Putra / <code class="font-bold">B-001</code> Putri) saat scan registrasi.</p>
               </div>
-              <input type="text" id="search-du" onkeyup="renderDaftarUlangTable()" placeholder="Cari regu / kwarran..."
+              <input type="text" id="search-du" onkeyup="renderDaftarUlangTable()" placeholder="Cari regu / kwarran / no..."
                 class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-pramuka-gold" />
             </div>
 
@@ -420,10 +420,10 @@
                   <tr>
                     <th class="p-3">Waktu Scan</th>
                     <th class="p-3">No. Peserta</th>
+                    <th class="p-3">No. Registrasi</th>
                     <th class="p-3">Nama Regu</th>
-                    <th class="p-3">Kwarran</th>
-                    <th class="p-3">No. Gudep</th>
-                    <th class="p-3">Petugas</th>
+                    <th class="p-3">Kwarran / Gudep</th>
+                    <th class="p-3 text-center">Kartu Peserta</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-daftar-ulang" class="divide-y divide-stone-200"></tbody>
@@ -453,8 +453,8 @@
               <input type="hidden" id="nilai-edit-row-index" value="" />
 
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta *</label>
-                <input type="text" id="nilai-no-peserta" list="list-peserta-options" required placeholder="Ketik atau pilih Nomor Peserta..."
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta / No. Registrasi *</label>
+                <input type="text" id="nilai-no-peserta" list="list-peserta-options" required placeholder="Ketik atau pilih Nomor Peserta (mis. A-001)..."
                   oninput="autoFillPesertaNilai()"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 <datalist id="list-peserta-options"></datalist>
@@ -587,11 +587,23 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-gold h-fit space-y-4">
             <h2 id="form-lomba-title" class="font-extrabold text-pramuka-dark text-base border-b pb-2">
-              <i class="fa-solid fa-trophy text-pramuka-gold mr-1"></i> Input Nama Mata Lomba
+              <i class="fa-solid fa-trophy text-pramuka-gold mr-1"></i> Input Mata Lomba
             </h2>
             <form id="form-lomba" class="space-y-3.5">
               <input type="hidden" id="lomba-is-edit" value="false" />
               <input type="hidden" id="lomba-index" value="" />
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Kategori / Kelompok Lomba *</label>
+                <select id="lomba-kelompok" required
+                  class="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-bold bg-white focus:ring-2 focus:ring-pramuka-gold outline-none">
+                  <option value="Kelompok 1 (Pengamalan Kode Kehormatan)">Kelompok 1 (Pengamalan Kode Kehormatan)</option>
+                  <option value="Kelompok 2 (Pengetahuan dan Bela Negara)">Kelompok 2 (Pengetahuan dan Bela Negara)</option>
+                  <option value="Kelompok 3 (Keterampilan Kepramukaan)">Kelompok 3 (Keterampilan Kepramukaan)</option>
+                  <option value="Kelompok 4 (Manajemen Regu)">Kelompok 4 (Manajemen Regu)</option>
+                  <option value="Kelompok 5 (Keterampilan dan Teknologi)">Kelompok 5 (Keterampilan dan Teknologi)</option>
+                  <option value="Kelompok 6 (Mental, Seni dan Budaya)">Kelompok 6 (Mental, Seni dan Budaya)</option>
+                </select>
+              </div>
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Mata Lomba *</label>
                 <input type="text" id="lomba-nama" required placeholder="Contoh: Pionering / Semaphore / Sandi..."
@@ -609,15 +621,27 @@
           </div>
 
           <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow space-y-4">
-            <div class="border-b pb-3">
-              <h2 class="font-extrabold text-pramuka-dark text-base">Daftar Pilihan Mata Lomba LT III</h2>
-              <p class="text-xs text-stone-500">Daftar mata lomba ini otomatis tampil pada pilihan dropdown di halaman Penilaian dan Laporan.</p>
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+              <div>
+                <h2 class="font-extrabold text-pramuka-dark text-base">Daftar Pilihan Mata Lomba LT III</h2>
+                <p class="text-xs text-stone-500">Daftar mata lomba berdasarkan kelompok otomatis tampil pada halaman Penilaian dan Laporan.</p>
+              </div>
+              <select id="filter-master-kelompok" onchange="renderLombaTable()" class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs font-bold outline-none">
+                <option value="ALL">Semua Kelompok</option>
+                <option value="Kelompok 1 (Pengamalan Kode Kehormatan)">Kelompok 1</option>
+                <option value="Kelompok 2 (Pengetahuan dan Bela Negara)">Kelompok 2</option>
+                <option value="Kelompok 3 (Keterampilan Kepramukaan)">Kelompok 3</option>
+                <option value="Kelompok 4 (Manajemen Regu)">Kelompok 4</option>
+                <option value="Kelompok 5 (Keterampilan dan Teknologi)">Kelompok 5</option>
+                <option value="Kelompok 6 (Mental, Seni dan Budaya)">Kelompok 6</option>
+              </select>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
                 <thead class="bg-pramuka-dark text-white uppercase">
                   <tr>
-                    <th class="p-3 w-16">No</th>
+                    <th class="p-3 w-12">No</th>
+                    <th class="p-3">Kelompok Lomba</th>
                     <th class="p-3">Nama Mata Lomba</th>
                     <th class="p-3 text-center w-36">Aksi</th>
                   </tr>
@@ -642,9 +666,10 @@
             <form id="form-peserta" class="space-y-3.5">
               <input type="hidden" id="peserta-is-edit" value="false" />
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta (QR Code ID) *</label>
-                <input type="text" id="peserta-nomor" required placeholder="Contoh: LT3-001"
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Registrasi (QR Code ID) *</label>
+                <input type="text" id="peserta-nomor" required placeholder="Contoh: REG-001"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                <p class="text-[10px] text-stone-500 mt-1">Nomor Peserta (A-001 / B-001) otomatis dibuat saat scan daftar ulang.</p>
               </div>
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor / Nama Kwarran *</label>
@@ -678,7 +703,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
               <div>
                 <h2 class="font-extrabold text-pramuka-dark text-base">Master Data Peserta LT III</h2>
-                <p class="text-xs text-stone-500">Tersimpan di sheet <code class="font-bold">DATA PESERTA</code>. Klik ikon kartu untuk melihat/mencetak ID QR Code.</p>
+                <p class="text-xs text-stone-500">Tersimpan di sheet <code class="font-bold">DATA PESERTA</code>. Klik ikon kartu untuk melihat/mencetak Kartu Registrasi.</p>
               </div>
               <input type="text" id="search-peserta" onkeyup="renderPesertaTable()" placeholder="Cari nomor / regu / kwarran..."
                 class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
@@ -688,12 +713,13 @@
               <table class="w-full text-left text-xs">
                 <thead class="bg-pramuka-dark text-white uppercase sticky top-0">
                   <tr>
+                    <th class="p-3">No. Registrasi</th>
                     <th class="p-3">No. Peserta</th>
                     <th class="p-3">Nama Regu</th>
                     <th class="p-3">Kwarran</th>
                     <th class="p-3">No. Gudep</th>
                     <th class="p-3 text-center">Kategori</th>
-                    <th class="p-3 text-center">Kartu ID</th>
+                    <th class="p-3 text-center">Kartu Registrasi</th>
                     <th class="p-3 text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -772,19 +798,30 @@
           <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
             <div>
               <h2 class="font-extrabold text-pramuka-dark text-lg">Laporan Hasil Penilaian LT III Kwarcab Tangerang 2026</h2>
-              <p class="text-xs text-stone-500">Pilih kategori Putra (Gudep Ganjil) / Putri (Gudep Genap) serta Rekap Kejuaraan atau Mata Lomba.</p>
+              <p class="text-xs text-stone-500">Pilih kategori Regu Putra / Regu Putri serta jenis laporan (Rekap Kejuaraan, Rekap Per Kelompok Lomba, atau Mata Lomba).</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <!-- PILIHAN PUTRA / PUTRI -->
               <select id="filter-laporan-gender" onchange="renderLaporanTable()" class="px-3.5 py-2 border-2 border-pramuka-primary bg-pramuka-light/60 text-pramuka-dark rounded-xl text-xs font-extrabold outline-none">
-                <option value="PUTRA">Kategori: REGU PUTRA (Gudep Ganjil)</option>
-                <option value="PUTRI">Kategori: REGU PUTRI (Gudep Genap)</option>
+                <option value="PUTRA">Kategori: REGU PUTRA</option>
+                <option value="PUTRI">Kategori: REGU PUTRI</option>
               </select>
 
-              <!-- PILIHAN REKAP KEJUARAAN / MATA LOMBA -->
-              <select id="filter-laporan-lomba" onchange="renderLaporanTable()" class="px-3.5 py-2 border border-stone-300 rounded-xl text-xs font-bold outline-none">
+              <!-- PILIHAN REKAP KEJUARAAN / REKAP PER KELOMPOK / MATA LOMBA -->
+              <select id="filter-laporan-lomba" onchange="onFilterLaporanChange()" class="px-3.5 py-2 border border-stone-300 rounded-xl text-xs font-bold outline-none">
                 <option value="REKAP_REGU">Rekap Kejuaraan (Total Nilai Per Regu)</option>
+                <option value="REKAP_KELOMPOK">Rekap Per Kelompok Lomba</option>
                 <option value="ALL">Semua Mata Lomba (Rincian)</option>
+              </select>
+
+              <!-- DROPDOWN PILIH KELOMPOK LOMBA (MUNCUL SAAT REKAP_KELOMPOK DIPILIH) -->
+              <select id="filter-laporan-kelompok" onchange="renderLaporanTable()" class="hidden px-3.5 py-2 border-2 border-amber-500 bg-amber-50 text-amber-950 rounded-xl text-xs font-bold outline-none">
+                <option value="Kelompok 1 (Pengamalan Kode Kehormatan)">Kelompok 1 (Pengamalan Kode Kehormatan)</option>
+                <option value="Kelompok 2 (Pengetahuan dan Bela Negara)">Kelompok 2 (Pengetahuan dan Bela Negara)</option>
+                <option value="Kelompok 3 (Keterampilan Kepramukaan)">Kelompok 3 (Keterampilan Kepramukaan)</option>
+                <option value="Kelompok 4 (Manajemen Regu)">Kelompok 4 (Manajemen Regu)</option>
+                <option value="Kelompok 5 (Keterampilan dan Teknologi)">Kelompok 5 (Keterampilan dan Teknologi)</option>
+                <option value="Kelompok 6 (Mental, Seni dan Budaya)">Kelompok 6 (Mental, Seni dan Budaya)</option>
               </select>
 
               <button onclick="exportLaporanPDF()" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-xs shadow flex items-center gap-2">
@@ -907,7 +944,7 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL POPUP: KARTU ID PESERTA (QR CODE & CETAK IDENTIK)   -->
+  <!-- MODAL POPUP: KARTU REGISTRASI & KARTU PESERTA (QR CODE)   -->
   <!-- ========================================================= -->
   <div id="modal-id-card" class="fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4 backdrop-blur-xs">
     <div id="id-card-wrapper" class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-4 border-pramuka-gold animate-bounce-once">
@@ -917,17 +954,18 @@
           <img id="card-logo-img" src="" alt="Logo" class="w-10 h-10 object-contain bg-white rounded-lg p-0.5 hidden" />
           <div class="text-left">
             <p class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider leading-tight">LT III Kwarcab Tangerang</p>
-            <p class="text-[9px] text-stone-200 uppercase">Tahun 2026 • Kartu Identitas Regu</p>
+            <p id="card-header-subtitle" class="text-[9px] text-stone-200 uppercase">Tahun 2026 • Kartu Registrasi</p>
           </div>
         </div>
 
         <div id="card-status-badge" class="inline-block px-3 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-extrabold uppercase tracking-wider mb-3 shadow">
-          <i class="fa-solid fa-circle-check mr-1"></i> TERDAFTAR ULANG
+          <i class="fa-solid fa-circle-check mr-1"></i> KARTU REGISTRASI
         </div>
 
         <div class="bg-white text-stone-900 rounded-2xl p-4 shadow-inner space-y-2">
-          <p class="text-[10px] font-bold text-stone-400 uppercase">Nomor Peserta</p>
-          <h3 id="card-no-peserta" class="text-2xl font-black text-pramuka-dark tracking-wider">LT3-001</h3>
+          <p id="card-number-label" class="text-[10px] font-bold text-stone-400 uppercase">Nomor Registrasi</p>
+          <h3 id="card-no-peserta" class="text-2xl font-black text-pramuka-dark tracking-wider">REG-001</h3>
+          <p id="card-sub-no-info" class="hidden text-[11px] font-bold text-emerald-700 bg-emerald-50 py-0.5 px-2 rounded-md inline-block"></p>
 
           <div class="border-t border-b border-stone-200 py-2 my-1">
             <p class="text-[10px] font-bold text-stone-400 uppercase">Nama Regu</p>
@@ -949,7 +987,7 @@
           <!-- QR CODE RENDER -->
           <div class="pt-3 flex flex-col items-center justify-center">
             <div id="card-qrcode-box" class="p-2 bg-white border border-stone-200 rounded-xl flex items-center justify-center"></div>
-            <span id="card-qr-label" class="text-[11px] font-mono font-bold text-stone-600 mt-1.5">LT3-001</span>
+            <span id="card-qr-label" class="text-[11px] font-mono font-bold text-stone-600 mt-1.5">REG-001</span>
           </div>
         </div>
 
@@ -971,16 +1009,28 @@
   <!-- JAVASCRIPT APPLICATION LOGIC                              -->
   <!-- ========================================================= -->
   <script>
-    // DAFTAR MATA LOMBA BAWAAN (DAPAT DITAMBAH & DIEDIT ADMIN)
+    // DAFTAR KELOMPOK LOMBA RESMI LT III
+    const KELOMPOK_LOMBA_OPTIONS = [
+      "Kelompok 1 (Pengamalan Kode Kehormatan)",
+      "Kelompok 2 (Pengetahuan dan Bela Negara)",
+      "Kelompok 3 (Keterampilan Kepramukaan)",
+      "Kelompok 4 (Manajemen Regu)",
+      "Kelompok 5 (Keterampilan dan Teknologi)",
+      "Kelompok 6 (Mental, Seni dan Budaya)"
+    ];
+
+    // DAFTAR MATA LOMBA BAWAAN DENGAN KELOMPOKNYA
     const DEFAULT_LOMBA_LIST = [
-      "Pionering",
-      "LKBB / PBB Tongkat",
-      "Semaphore & Morse",
-      "Pertolongan Pertama (P3K)",
-      "Menaksir & Peta Pita",
-      "Tapak Kemah & Administrasi Regu",
-      "Pentas Seni Budaya",
-      "Masak Rimba / Bivak"
+      { kelompok: "Kelompok 1 (Pengamalan Kode Kehormatan)", nama: "Pengamalan Kode Kehormatan & Ibadah" },
+      { kelompok: "Kelompok 2 (Pengetahuan dan Bela Negara)", nama: "Pengetahuan Umum & Kepramukaan (PUPK)" },
+      { kelompok: "Kelompok 3 (Keterampilan Kepramukaan)", nama: "Pionering" },
+      { kelompok: "Kelompok 3 (Keterampilan Kepramukaan)", nama: "Semaphore & Morse" },
+      { kelompok: "Kelompok 3 (Keterampilan Kepramukaan)", nama: "Pertolongan Pertama (P3K)" },
+      { kelompok: "Kelompok 3 (Keterampilan Kepramukaan)", nama: "Menaksir & Peta Pita" },
+      { kelompok: "Kelompok 4 (Manajemen Regu)", nama: "Tapak Kemah & Administrasi Regu" },
+      { kelompok: "Kelompok 5 (Keterampilan dan Teknologi)", nama: "LKBB / PBB Tongkat" },
+      { kelompok: "Kelompok 5 (Keterampilan dan Teknologi)", nama: "Masak Rimba / Bivak" },
+      { kelompok: "Kelompok 6 (Mental, Seni dan Budaya)", nama: "Pentas Seni Budaya" }
     ];
 
     // STATE GLOBAL APLIKASI
@@ -989,7 +1039,8 @@
       peserta: [],
       daftarUlang: [],
       penilaian: [],
-      lombaList: [],
+      lombaList: [], // Array of { kelompok, nama }
+      regToPesertaMap: {}, // Mapping Nomor Registrasi -> Nomor Peserta (A-001 / B-001)
       settings: {}
     };
     let CURRENT_USER = null;
@@ -1010,10 +1061,126 @@
       return (lastDigit % 2 === 1) ? 'PUTRA' : 'PUTRI';
     }
 
-    function getPesertaKategori(noPeserta) {
-      const found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim() === String(noPeserta).trim());
+    // Membangun peta Nomor Registrasi <-> Nomor Peserta (A-001 / B-001) berdasarkan urutan daftar ulang
+    function rebuildRegistrationMappings() {
+      const map = {};
+      let countPutra = 0;
+      let countPutri = 0;
+
+      APP_DATA.daftarUlang.forEach(d => {
+        const rawNo = String(d['Nomor Peserta'] || '').trim();
+        const kat = getKategoriGudep(d['Nomor Gudep']);
+
+        // Cek apakah sudah memiliki format A-001 / B-001 atau masih Nomor Registrasi
+        const matchAssigned = rawNo.match(/^([AB]-\d{3,})(?:\s*\((.+)\))?$/i);
+        let assignedNo = '';
+        let regNo = '';
+
+        if (matchAssigned) {
+          assignedNo = matchAssigned[1].toUpperCase();
+          regNo = matchAssigned[2] ? matchAssigned[2].trim() : '';
+          const numPart = parseInt(assignedNo.split('-')[1], 10) || 0;
+          if (assignedNo.startsWith('A-')) countPutra = Math.max(countPutra, numPart);
+          if (assignedNo.startsWith('B-')) countPutri = Math.max(countPutri, numPart);
+        } else {
+          regNo = rawNo;
+          if (kat === 'PUTRA') {
+            countPutra++;
+            assignedNo = `A-${String(countPutra).padStart(3, '0')}`;
+          } else {
+            countPutri++;
+            assignedNo = `B-${String(countPutri).padStart(3, '0')}`;
+          }
+        }
+
+        // Cocokkan dengan master peserta berdasarkan Nama Regu + Gudep jika regNo kosong
+        if (!regNo) {
+          const pMatch = APP_DATA.peserta.find(p =>
+            String(p['Nama Regu']).trim().toLowerCase() === String(d['Nama Regu']).trim().toLowerCase() &&
+            String(p['Nomor Gudep']).trim() === String(d['Nomor Gudep']).trim()
+          );
+          if (pMatch) regNo = String(pMatch['Nomor Peserta']).trim();
+        }
+
+        d._assignedNoPeserta = assignedNo;
+        d._nomorRegistrasi = regNo || rawNo;
+
+        if (regNo) {
+          map[regNo.toLowerCase()] = assignedNo;
+        }
+        map[assignedNo.toLowerCase()] = assignedNo;
+      });
+
+      APP_DATA.regToPesertaMap = map;
+    }
+
+    // Generate Nomor Peserta berikutnya (A-001 untuk Putra, B-001 untuk Putri)
+    function generateNextNomorPeserta(kategori) {
+      const prefix = kategori === 'PUTRA' ? 'A' : 'B';
+      let maxNum = 0;
+
+      APP_DATA.daftarUlang.forEach(d => {
+        const assigned = String(d._assignedNoPeserta || d['Nomor Peserta'] || '').trim().toUpperCase();
+        if (assigned.startsWith(prefix + '-')) {
+          const numPart = parseInt(assigned.split('-')[1], 10);
+          if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
+        }
+      });
+
+      return `${prefix}-${String(maxNum + 1).padStart(3, '0')}`;
+    }
+
+    function findPesertaByAnyNumber(inputNo) {
+      const key = String(inputNo || '').trim().toLowerCase();
+      if (!key) return null;
+
+      // 1. Cek langsung ke Nomor Registrasi di master peserta
+      let found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === key);
+      if (found) return found;
+
+      // 2. Cek apakah input adalah Nomor Peserta hasil generate (mis. A-001 / B-001)
+      const duRecord = APP_DATA.daftarUlang.find(d =>
+        String(d._assignedNoPeserta || '').toLowerCase() === key ||
+        String(d['Nomor Peserta'] || '').toLowerCase() === key
+      );
+      if (duRecord) {
+        found = APP_DATA.peserta.find(p =>
+          String(p['Nomor Peserta']).trim().toLowerCase() === String(duRecord._nomorRegistrasi || '').toLowerCase() ||
+          (String(p['Nama Regu']).trim().toLowerCase() === String(duRecord['Nama Regu']).trim().toLowerCase() &&
+           String(p['Nomor Gudep']).trim() === String(duRecord['Nomor Gudep']).trim())
+        );
+        if (found) return found;
+      }
+
+      return null;
+    }
+
+    function getDisplayNoPesertaForReg(noRegistrasi) {
+      const key = String(noRegistrasi || '').trim().toLowerCase();
+      return APP_DATA.regToPesertaMap[key] || '';
+    }
+
+    function getPesertaKategori(noPesertaOrReg) {
+      const str = String(noPesertaOrReg || '').trim().toUpperCase();
+      if (str.startsWith('A-')) return 'PUTRA';
+      if (str.startsWith('B-')) return 'PUTRI';
+      const found = findPesertaByAnyNumber(noPesertaOrReg);
       if (!found) return 'PUTRA';
       return getKategoriGudep(found['Nomor Gudep']);
+    }
+
+    // Normalisasi struktur daftar mata lomba agar mendukung format lama (string) maupun baru ({kelompok, nama})
+    function normalizeLombaList(rawList) {
+      if (!Array.isArray(rawList)) return [];
+      return rawList.map(item => {
+        if (typeof item === 'string') {
+          return { kelompok: KELOMPOK_LOMBA_OPTIONS[2], nama: item.trim() };
+        }
+        return {
+          kelompok: item.kelompok || KELOMPOK_LOMBA_OPTIONS[2],
+          nama: String(item.nama || '').trim()
+        };
+      }).filter(item => item.nama !== '');
     }
 
     // =========================================================
@@ -1089,21 +1256,25 @@
           APP_DATA.penilaian = res.penilaian || [];
           APP_DATA.settings = res.settings || {};
 
+          rebuildRegistrationMappings();
+
           // Muat daftar mata lomba dari pengaturan server / localStorage / default
           let savedLomba = [];
           if (APP_DATA.settings.daftarMataLomba) {
             try {
-              savedLomba = JSON.parse(APP_DATA.settings.daftarMataLomba);
+              savedLomba = normalizeLombaList(JSON.parse(APP_DATA.settings.daftarMataLomba));
             } catch (e) {}
           }
           if (!Array.isArray(savedLomba) || savedLomba.length === 0) {
-            const localCache = localStorage.getItem('lt3_mata_lomba');
-            savedLomba = localCache ? JSON.parse(localCache) : [...DEFAULT_LOMBA_LIST];
+            const localCache = localStorage.getItem('lt3_mata_lomba_v2');
+            savedLomba = localCache ? normalizeLombaList(JSON.parse(localCache)) : [...DEFAULT_LOMBA_LIST];
           }
           // Gabungkan juga mata lomba yang sudah ada di data penilaian agar tidak hilang
           APP_DATA.penilaian.forEach(n => {
             const nama = String(n['Nama Lomba'] || '').trim();
-            if (nama && !savedLomba.includes(nama)) savedLomba.push(nama);
+            if (nama && !savedLomba.some(l => l.nama.toLowerCase() === nama.toLowerCase())) {
+              savedLomba.push({ kelompok: KELOMPOK_LOMBA_OPTIONS[2], nama });
+            }
           });
           APP_DATA.lombaList = savedLomba;
 
@@ -1309,49 +1480,89 @@
 
     async function processScannedCode(rawCode) {
       const code = String(rawCode).trim();
-      showLoader(`Memverifikasi Nomor Peserta: ${code}...`);
+      showLoader(`Memverifikasi Nomor Registrasi: ${code}...`);
 
       try {
+        // Cari peserta berdasarkan Nomor Registrasi di data lokal terlebih dahulu
+        const pesertaFound = findPesertaByAnyNumber(code);
+        if (!pesertaFound) {
+          hideLoader();
+          playBeep('error');
+          speakText("Nomor registrasi peserta tidak ditemukan.");
+          showToast("Nomor registrasi tidak terdaftar di Master Data Peserta!", 'error');
+          document.getElementById('scan-input-code').focus();
+          return;
+        }
+
+        const noRegistrasi = String(pesertaFound['Nomor Peserta']).trim();
+        const kategori = getKategoriGudep(pesertaFound['Nomor Gudep']);
+
+        // Cek apakah sudah pernah daftar ulang sebelumnya
+        const existingDU = APP_DATA.daftarUlang.find(d =>
+          String(d._nomorRegistrasi || '').toLowerCase() === noRegistrasi.toLowerCase() ||
+          String(d['Nomor Peserta'] || '').toLowerCase() === noRegistrasi.toLowerCase() ||
+          (String(d['Nama Regu']).trim().toLowerCase() === String(pesertaFound['Nama Regu']).trim().toLowerCase() &&
+           String(d['Nomor Gudep']).trim() === String(pesertaFound['Nomor Gudep']).trim())
+        );
+
+        if (existingDU) {
+          hideLoader();
+          playBeep('error');
+          const assignedNo = existingDU._assignedNoPeserta || getDisplayNoPesertaForReg(noRegistrasi) || noRegistrasi;
+          speakText(`Perhatian! ${pesertaFound['Nama Regu']} sudah melakukan daftar ulang dengan nomor peserta ${assignedNo}.`);
+          showToast(`Peserta sudah daftar ulang sebelumnya (${assignedNo})`, 'warning');
+          openIdCardModal(pesertaFound, existingDU['Timestamp'], "SUDAH DAFTAR ULANG SEBELUMNYA", "PESERTA", assignedNo);
+          document.getElementById('scan-input-code').focus();
+          return;
+        }
+
+        // Generate Nomor Peserta otomatis: A-001 (Putra) / B-001 (Putri)
+        const generatedNoPeserta = generateNextNomorPeserta(kategori);
+
         const res = await apiCall({
           action: 'scanDaftarUlang',
-          nomorPeserta: code,
-          petugas: CURRENT_USER ? CURRENT_USER.nama : 'Panitia'
+          nomorPeserta: noRegistrasi,
+          petugas: `${CURRENT_USER ? CURRENT_USER.nama : 'Panitia'} [${generatedNoPeserta}]`
         });
 
         hideLoader();
 
         if (res.status === 'success') {
           playBeep('success');
-          const p = res.peserta;
-          const kalimat = `Selamat datang, ${p['Nama Regu']}, dari Kwarran ${p['Nomor Kwarran']}, berhasil daftar ulang.`;
+          const p = res.peserta || pesertaFound;
+          const kalimat = `Selamat datang, ${p['Nama Regu']}, dari Kwarran ${p['Nomor Kwarran']}, mendapatkan nomor peserta ${generatedNoPeserta}.`;
           speakText(kalimat);
-          showToast(kalimat, 'success');
+          showToast(`Berhasil! ${p['Nama Regu']} mendapatkan Nomor Peserta: ${generatedNoPeserta}`, 'success');
 
-          // Tampilkan Kartu ID Digital dengan QR Code
-          openIdCardModal(p, res.timestamp, "TERDAFTAR ULANG");
-
-          // Update state lokal & tabel
+          // Simpan ke state lokal & bangun ulang mapping
           APP_DATA.daftarUlang.push({
             'Timestamp': res.timestamp,
-            'Nomor Peserta': p['Nomor Peserta'],
+            'Nomor Peserta': generatedNoPeserta,
             'Nomor Kwarran': p['Nomor Kwarran'],
             'Nomor Gudep': p['Nomor Gudep'],
             'Nama Regu': p['Nama Regu'],
             'Status': 'Hadir',
-            'Petugas Scan': CURRENT_USER.nama
+            'Petugas Scan': `${CURRENT_USER ? CURRENT_USER.nama : 'Panitia'} [${generatedNoPeserta}]`,
+            _assignedNoPeserta: generatedNoPeserta,
+            _nomorRegistrasi: noRegistrasi
           });
+          rebuildRegistrationMappings();
           refreshAllViews();
+
+          // Tampilkan Kartu Peserta dengan Nomor Peserta baru (A-001 / B-001)
+          openIdCardModal(p, res.timestamp, "TERDAFTAR ULANG", "PESERTA", generatedNoPeserta);
 
         } else if (res.status === 'duplicate') {
           playBeep('error');
+          const assignedNo = getDisplayNoPesertaForReg(noRegistrasi) || generatedNoPeserta;
           speakText(`Perhatian! ${res.peserta['Nama Regu']} sudah melakukan daftar ulang sebelumnya.`);
           showToast(res.message, 'warning');
-          openIdCardModal(res.peserta, res.waktuSebelumnya, "SUDAH DAFTAR ULANG SEBELUMNYA");
+          openIdCardModal(res.peserta, res.waktuSebelumnya, "SUDAH DAFTAR ULANG SEBELUMNYA", "PESERTA", assignedNo);
 
         } else {
           playBeep('error');
-          speakText("Nomor peserta tidak ditemukan.");
-          showToast(res.message || "Nomor peserta tidak terdaftar!", 'error');
+          speakText("Nomor registrasi tidak ditemukan.");
+          showToast(res.message || "Nomor registrasi tidak terdaftar!", 'error');
         }
       } catch (err) {
         hideLoader();
@@ -1362,18 +1573,40 @@
     }
 
     // =========================================================
-    // KARTU ID DIGITAL MODAL & QR CODE GENERATOR
+    // KARTU REGISTRASI & KARTU PESERTA MODAL + QR CODE GENERATOR
     // =========================================================
-    function openIdCardModal(peserta, timestamp = null, badgeText = "KARTU PESERTA LT III") {
-      const noPeserta = String(peserta['Nomor Peserta']).trim();
+    function openIdCardModal(peserta, timestamp = null, badgeText = "KARTU REGISTRASI", cardType = "REGISTRASI", overrideNoPeserta = null) {
+      const noRegistrasi = String(peserta['Nomor Peserta']).trim();
+      const assignedNo = overrideNoPeserta || getDisplayNoPesertaForReg(noRegistrasi);
       const kategori = getKategoriGudep(peserta['Nomor Gudep']);
 
-      document.getElementById('card-no-peserta').textContent = noPeserta;
+      const isKartuPeserta = cardType === "PESERTA" && assignedNo;
+      const primaryCode = isKartuPeserta ? assignedNo : noRegistrasi;
+
+      document.getElementById('card-header-subtitle').textContent = isKartuPeserta
+        ? 'Tahun 2026 • Kartu Peserta Lomba'
+        : 'Tahun 2026 • Kartu Registrasi';
+      document.getElementById('card-number-label').textContent = isKartuPeserta
+        ? 'Nomor Peserta'
+        : 'Nomor Registrasi';
+      document.getElementById('card-no-peserta').textContent = primaryCode;
+
+      const subNoEl = document.getElementById('card-sub-no-info');
+      if (isKartuPeserta) {
+        subNoEl.textContent = `No. Registrasi: ${noRegistrasi}`;
+        subNoEl.classList.remove('hidden');
+      } else if (assignedNo) {
+        subNoEl.textContent = `No. Peserta Aktif: ${assignedNo}`;
+        subNoEl.classList.remove('hidden');
+      } else {
+        subNoEl.classList.add('hidden');
+      }
+
       document.getElementById('card-nama-regu').textContent = peserta['Nama Regu'];
       document.getElementById('card-kwarran').textContent = peserta['Nomor Kwarran'];
       document.getElementById('card-gudep').textContent = peserta['Nomor Gudep'];
       document.getElementById('card-kategori-badge').textContent = `REGU ${kategori}`;
-      document.getElementById('card-qr-label').textContent = noPeserta;
+      document.getElementById('card-qr-label').textContent = primaryCode;
       document.getElementById('card-status-badge').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${badgeText}`;
       document.getElementById('card-timestamp').textContent = timestamp ? `Waktu Daftar Ulang: ${timestamp}` : 'LT III Kwarcab Tangerang Tahun 2026';
 
@@ -1381,7 +1614,7 @@
       const qrBox = document.getElementById('card-qrcode-box');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
-        text: noPeserta,
+        text: primaryCode,
         width: 116,
         height: 116,
         colorDark: "#1c1917",
@@ -1402,23 +1635,24 @@
     }
 
     // =========================================================
-    // MASTER DATA MATA LOMBA (INPUT, EDIT, HAPUS)
+    // MASTER DATA MATA LOMBA (KELOMPOK + MATA LOMBA)
     // =========================================================
     document.getElementById('form-lomba').addEventListener('submit', async (e) => {
       e.preventDefault();
       const isEdit = document.getElementById('lomba-is-edit').value === 'true';
       const idx = parseInt(document.getElementById('lomba-index').value, 10);
+      const kelompokBaru = document.getElementById('lomba-kelompok').value;
       const namaBaru = document.getElementById('lomba-nama').value.trim();
       if (!namaBaru) return;
 
       if (isEdit && !isNaN(idx) && APP_DATA.lombaList[idx] !== undefined) {
-        APP_DATA.lombaList[idx] = namaBaru;
+        APP_DATA.lombaList[idx] = { kelompok: kelompokBaru, nama: namaBaru };
       } else {
-        if (APP_DATA.lombaList.some(l => l.toLowerCase() === namaBaru.toLowerCase())) {
+        if (APP_DATA.lombaList.some(l => l.nama.toLowerCase() === namaBaru.toLowerCase())) {
           showToast("Nama mata lomba sudah ada!", "warning");
           return;
         }
-        APP_DATA.lombaList.push(namaBaru);
+        APP_DATA.lombaList.push({ kelompok: kelompokBaru, nama: namaBaru });
       }
 
       await persistLombaListToServer();
@@ -1427,31 +1661,33 @@
     });
 
     function editLomba(index) {
-      const nama = APP_DATA.lombaList[index];
-      if (!nama) return;
+      const item = APP_DATA.lombaList[index];
+      if (!item) return;
       document.getElementById('lomba-is-edit').value = 'true';
       document.getElementById('lomba-index').value = index;
-      document.getElementById('lomba-nama').value = nama;
-      document.getElementById('form-lomba-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600 mr-1"></i> Edit Nama Mata Lomba`;
+      document.getElementById('lomba-kelompok').value = item.kelompok || KELOMPOK_LOMBA_OPTIONS[0];
+      document.getElementById('lomba-nama').value = item.nama;
+      document.getElementById('form-lomba-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600 mr-1"></i> Edit Mata Lomba`;
     }
 
     function resetFormLomba() {
       document.getElementById('form-lomba').reset();
       document.getElementById('lomba-is-edit').value = 'false';
       document.getElementById('lomba-index').value = '';
-      document.getElementById('form-lomba-title').innerHTML = `<i class="fa-solid fa-trophy text-pramuka-gold mr-1"></i> Input Nama Mata Lomba`;
+      document.getElementById('form-lomba-title').innerHTML = `<i class="fa-solid fa-trophy text-pramuka-gold mr-1"></i> Input Mata Lomba`;
     }
 
     async function deleteLomba(index) {
-      const nama = APP_DATA.lombaList[index];
-      if (!confirm(`Hapus mata lomba "${nama}" dari daftar pilihan?`)) return;
+      const item = APP_DATA.lombaList[index];
+      if (!item) return;
+      if (!confirm(`Hapus mata lomba "${item.nama}" dari daftar pilihan?`)) return;
       APP_DATA.lombaList.splice(index, 1);
       await persistLombaListToServer();
       refreshAllViews();
     }
 
     async function persistLombaListToServer() {
-      localStorage.setItem('lt3_mata_lomba', JSON.stringify(APP_DATA.lombaList));
+      localStorage.setItem('lt3_mata_lomba_v2', JSON.stringify(APP_DATA.lombaList));
       APP_DATA.settings.daftarMataLomba = JSON.stringify(APP_DATA.lombaList);
       showLoader("Menyimpan daftar mata lomba...");
       try {
@@ -1471,20 +1707,31 @@
 
     function renderLombaTable() {
       const tbody = document.getElementById('tbody-lomba');
-      tbody.innerHTML = APP_DATA.lombaList.length ? APP_DATA.lombaList.map((nama, idx) => `
+      const filterKel = document.getElementById('filter-master-kelompok').value;
+
+      const listWithIndex = APP_DATA.lombaList
+        .map((item, idx) => ({ ...item, originalIndex: idx }))
+        .filter(item => filterKel === 'ALL' || item.kelompok === filterKel);
+
+      tbody.innerHTML = listWithIndex.length ? listWithIndex.map((item, idx) => `
         <tr class="hover:bg-stone-50">
           <td class="p-3 font-bold text-stone-500">${idx + 1}</td>
-          <td class="p-3 font-bold text-pramuka-dark">${nama}</td>
+          <td class="p-3">
+            <span class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[11px]">
+              ${item.kelompok}
+            </span>
+          </td>
+          <td class="p-3 font-bold text-pramuka-dark">${item.nama}</td>
           <td class="p-3 text-center space-x-1">
-            <button onclick="editLomba(${idx})" class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" title="Edit Mata Lomba">
+            <button onclick="editLomba(${item.originalIndex})" class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" title="Edit Mata Lomba">
               <i class="fa-solid fa-pen"></i> Edit
             </button>
-            <button onclick="deleteLomba(${idx})" class="px-2.5 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Hapus Mata Lomba">
+            <button onclick="deleteLomba(${item.originalIndex})" class="px-2.5 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Hapus Mata Lomba">
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>
         </tr>
-      `).join('') : `<tr><td colspan="3" class="p-6 text-center text-stone-400">Belum ada mata lomba</td></tr>`;
+      `).join('') : `<tr><td colspan="4" class="p-6 text-center text-stone-400">Belum ada mata lomba pada kelompok ini</td></tr>`;
     }
 
     // =========================================================
@@ -1492,10 +1739,12 @@
     // =========================================================
     function autoFillPesertaNilai() {
       const no = document.getElementById('nilai-no-peserta').value.trim();
-      const found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === no.toLowerCase());
+      const found = findPesertaByAnyNumber(no);
       if (found) {
         const kat = getKategoriGudep(found['Nomor Gudep']);
-        document.getElementById('nilai-nama-regu').value = found['Nama Regu'];
+        const assignedNo = getDisplayNoPesertaForReg(found['Nomor Peserta']);
+        const labelNo = assignedNo ? ` [${assignedNo}]` : '';
+        document.getElementById('nilai-nama-regu').value = `${found['Nama Regu']}${labelNo}`;
         document.getElementById('nilai-kwarran').value = `${found['Nomor Kwarran']} (${kat})`;
       } else {
         document.getElementById('nilai-nama-regu').value = '';
@@ -1556,9 +1805,11 @@
     document.getElementById('form-penilaian').addEventListener('submit', async (e) => {
       e.preventDefault();
       const editRowIndex = document.getElementById('nilai-edit-row-index').value;
-      const noPeserta = document.getElementById('nilai-no-peserta').value.trim();
-      const namaRegu = document.getElementById('nilai-nama-regu').value.trim() || 'Peserta Umum';
-      const foundP = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === noPeserta.toLowerCase());
+      const rawInputNo = document.getElementById('nilai-no-peserta').value.trim();
+      const foundP = findPesertaByAnyNumber(rawInputNo);
+      const assignedNo = foundP ? getDisplayNoPesertaForReg(foundP['Nomor Peserta']) : '';
+      const noPesertaToSave = assignedNo || rawInputNo;
+      const namaRegu = foundP ? foundP['Nama Regu'] : (document.getElementById('nilai-nama-regu').value.trim() || 'Peserta Umum');
       const kwarran = foundP ? foundP['Nomor Kwarran'] : (document.getElementById('nilai-kwarran').value.trim() || '-');
       const namaLomba = document.getElementById('nilai-nama-lomba').value.trim();
       const j1 = parseFloat(document.getElementById('nilai-juri-1').value) || 0;
@@ -1574,7 +1825,7 @@
         const res = await apiCall({
           action: 'savePenilaian',
           data: {
-            nomorPeserta: noPeserta,
+            nomorPeserta: noPesertaToSave,
             namaRegu: namaRegu,
             nomorKwarran: kwarran,
             namaLomba: namaLomba,
@@ -1600,10 +1851,10 @@
 
     // DOWNLOAD TEMPLATE EXCEL
     function downloadTemplateExcel() {
-      const sampleLomba = APP_DATA.lombaList.length > 0 ? APP_DATA.lombaList[0] : "Pionering";
+      const sampleLomba = APP_DATA.lombaList.length > 0 ? APP_DATA.lombaList[0].nama : "Pionering";
       const sampleData = [
-        { "Nomor Peserta": "LT3-001", "Nama Lomba": sampleLomba, "Nilai Juri 1": 85, "Nilai Juri 2": 88 },
-        { "Nomor Peserta": "LT3-002", "Nama Lomba": sampleLomba, "Nilai Juri 1": 90, "Nilai Juri 2": 87 }
+        { "Nomor Peserta": "A-001", "Nama Lomba": sampleLomba, "Nilai Juri 1": 85, "Nilai Juri 2": 88 },
+        { "Nomor Peserta": "B-001", "Nama Lomba": sampleLomba, "Nilai Juri 1": 90, "Nilai Juri 2": 87 }
       ];
       const ws = XLSX.utils.json_to_sheet(sampleData);
       const wb = XLSX.utils.book_new();
@@ -1634,7 +1885,7 @@
           const j2 = parseFloat(row['Nilai Juri 2'] || row['Juri 2'] || 0) || 0;
 
           if (String(no).trim() !== '' && String(lomba).trim() !== '') {
-            const foundPeserta = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim() === String(no).trim());
+            const foundPeserta = findPesertaByAnyNumber(no);
             const namaRegu = foundPeserta ? foundPeserta['Nama Regu'] : '(Tidak terdaftar)';
             const total = j1 + j2;
 
@@ -1933,10 +2184,15 @@
     // RENDER SEMUA TABEL & STATISTIK
     // =========================================================
     function refreshAllViews() {
+      // Statistik Dashboard
       const totalP = APP_DATA.peserta.length;
       const totalDU = APP_DATA.daftarUlang.length;
-      const countPutra = APP_DATA.peserta.filter(p => getKategoriGudep(p['Nomor Gudep']) === 'PUTRA').length;
-      const countPutri = totalP - countPutra;
+      let countPutra = 0;
+      let countPutri = 0;
+      APP_DATA.peserta.forEach(p => {
+        if (getKategoriGudep(p['Nomor Gudep']) === 'PUTRA') countPutra++;
+        else countPutri++;
+      });
 
       document.getElementById('stat-total-peserta').textContent = totalP;
       document.getElementById('stat-gender-split').textContent = `${countPutra} Putra • ${countPutri} Putri`;
@@ -1948,28 +2204,46 @@
       const dashTbody = document.getElementById('dashboard-du-tbody');
       const recentDU = [...APP_DATA.daftarUlang].reverse().slice(0, 8);
       dashTbody.innerHTML = recentDU.length ? recentDU.map(d => {
-        const kat = getKategoriGudep(d['Nomor Gudep']);
+        const assignedNo = d._assignedNoPeserta || d['Nomor Peserta'];
         return `
           <tr>
             <td class="p-2.5 text-stone-500">${d['Timestamp']}</td>
-            <td class="p-2.5 font-bold text-pramuka-dark">${d['Nomor Peserta']}</td>
+            <td class="p-2.5 font-extrabold text-emerald-700">${assignedNo}</td>
             <td class="p-2.5 font-semibold">${d['Nama Regu']}</td>
-            <td class="p-2.5">${d['Nomor Kwarran']} / ${d['Nomor Gudep']} <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${kat === 'PUTRA' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">${kat}</span></td>
+            <td class="p-2.5">${d['Nomor Kwarran']} / ${d['Nomor Gudep']}</td>
             <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">${d['Status']}</span></td>
           </tr>
         `;
       }).join('') : `<tr><td colspan="5" class="p-4 text-center text-stone-400">Belum ada peserta daftar ulang</td></tr>`;
 
-      // Datalist Peserta pada Form Penilaian
+      // Datalist Peserta pada Form Penilaian (menampilkan No. Peserta A-001/B-001 jika sudah daftar ulang)
       const dl = document.getElementById('list-peserta-options');
-      dl.innerHTML = APP_DATA.peserta.map(p => `<option value="${p['Nomor Peserta']}">${p['Nama Regu']} - ${p['Nomor Kwarran']}</option>`).join('');
+      dl.innerHTML = APP_DATA.peserta.map(p => {
+        const regNo = String(p['Nomor Peserta']).trim();
+        const assignedNo = getDisplayNoPesertaForReg(regNo);
+        const val = assignedNo || regNo;
+        const label = assignedNo
+          ? `${assignedNo} (Reg: ${regNo}) - ${p['Nama Regu']} - ${p['Nomor Kwarran']}`
+          : `${regNo} - ${p['Nama Regu']} - ${p['Nomor Kwarran']}`;
+        return `<option value="${val}">${label}</option>`;
+      }).join('');
 
-      // Populate Dropdown Mata Lomba pada Form Penilaian
+      // Populate Dropdown Mata Lomba pada Form Penilaian (dikelompokkan berdasarkan Kelompok Lomba)
       const selectLomba = document.getElementById('nilai-nama-lomba');
       const currentSelectedLomba = selectLomba.value;
-      selectLomba.innerHTML = `<option value="">-- Pilih Mata Lomba --</option>` +
-        APP_DATA.lombaList.map(l => `<option value="${l}">${l}</option>`).join('');
-      if (APP_DATA.lombaList.includes(currentSelectedLomba)) {
+      let lombaOptionsHtml = `<option value="">-- Pilih Mata Lomba --</option>`;
+      KELOMPOK_LOMBA_OPTIONS.forEach(kel => {
+        const itemsInKel = APP_DATA.lombaList.filter(l => l.kelompok === kel);
+        if (itemsInKel.length > 0) {
+          lombaOptionsHtml += `<optgroup label="${kel}">`;
+          itemsInKel.forEach(l => {
+            lombaOptionsHtml += `<option value="${l.nama}">${l.nama}</option>`;
+          });
+          lombaOptionsHtml += `</optgroup>`;
+        }
+      });
+      selectLomba.innerHTML = lombaOptionsHtml;
+      if (APP_DATA.lombaList.some(l => l.nama === currentSelectedLomba)) {
         selectLomba.value = currentSelectedLomba;
       }
 
@@ -1977,15 +2251,17 @@
       const filterSelect = document.getElementById('filter-laporan-lomba');
       const currentVal = filterSelect.value;
       const allLombaSet = new Set([
-        ...APP_DATA.lombaList,
+        ...APP_DATA.lombaList.map(l => l.nama),
         ...APP_DATA.penilaian.map(n => n['Nama Lomba']).filter(Boolean)
       ]);
       filterSelect.innerHTML = `
         <option value="REKAP_REGU">Rekap Kejuaraan (Total Nilai Per Regu)</option>
+        <option value="REKAP_KELOMPOK">Rekap Per Kelompok Lomba</option>
         <option value="ALL">Semua Mata Lomba (Rincian)</option>
         ${[...allLombaSet].map(l => `<option value="${l}">Mata Lomba: ${l}</option>`).join('')}
       `;
       if ([...filterSelect.options].some(o => o.value === currentVal)) filterSelect.value = currentVal;
+      onFilterLaporanChange();
 
       renderDaftarUlangTable();
       renderPenilaianTable();
@@ -1998,20 +2274,33 @@
     function renderDaftarUlangTable() {
       const q = (document.getElementById('search-du').value || '').toLowerCase();
       const filtered = [...APP_DATA.daftarUlang].reverse().filter(d =>
-        String(d['Nomor Peserta']).toLowerCase().includes(q) ||
+        String(d._assignedNoPeserta || d['Nomor Peserta']).toLowerCase().includes(q) ||
+        String(d._nomorRegistrasi || '').toLowerCase().includes(q) ||
         String(d['Nama Regu']).toLowerCase().includes(q) ||
         String(d['Nomor Kwarran']).toLowerCase().includes(q)
       );
       document.getElementById('tbody-daftar-ulang').innerHTML = filtered.length ? filtered.map(d => {
         const kat = getKategoriGudep(d['Nomor Gudep']);
+        const assignedNo = d._assignedNoPeserta || d['Nomor Peserta'];
+        const regNo = d._nomorRegistrasi || '-';
+        const pObj = {
+          'Nomor Peserta': regNo,
+          'Nama Regu': d['Nama Regu'],
+          'Nomor Kwarran': d['Nomor Kwarran'],
+          'Nomor Gudep': d['Nomor Gudep']
+        };
         return `
           <tr class="hover:bg-stone-50">
             <td class="p-3 text-stone-500">${d['Timestamp']}</td>
-            <td class="p-3 font-extrabold text-pramuka-dark">${d['Nomor Peserta']}</td>
+            <td class="p-3 font-black text-emerald-700">${assignedNo}</td>
+            <td class="p-3 font-bold text-stone-600">${regNo}</td>
             <td class="p-3 font-bold">${d['Nama Regu']}</td>
-            <td class="p-3">${d['Nomor Kwarran']}</td>
-            <td class="p-3">${d['Nomor Gudep']} <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${kat === 'PUTRA' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">${kat}</span></td>
-            <td class="p-3 text-stone-500">${d['Petugas Scan']}</td>
+            <td class="p-3">${d['Nomor Kwarran']} / ${d['Nomor Gudep']} <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${kat === 'PUTRA' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">${kat}</span></td>
+            <td class="p-3 text-center">
+              <button onclick='openIdCardModal(${JSON.stringify(pObj)}, "${d['Timestamp']}", "KARTU PESERTA LT III", "PESERTA", "${assignedNo}")' class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 rounded-lg font-bold text-[11px]">
+                <i class="fa-solid fa-id-card mr-1"></i> Kartu ${assignedNo}
+              </button>
+            </td>
           </tr>
         `;
       }).join('') : `<tr><td colspan="6" class="p-6 text-center text-stone-400">Data daftar ulang tidak ditemukan</td></tr>`;
@@ -2048,17 +2337,22 @@
 
     function renderPesertaTable() {
       const q = (document.getElementById('search-peserta').value || '').toLowerCase();
-      const filtered = APP_DATA.peserta.filter(p =>
-        String(p['Nomor Peserta']).toLowerCase().includes(q) ||
-        String(p['Nama Regu']).toLowerCase().includes(q) ||
-        String(p['Nomor Kwarran']).toLowerCase().includes(q)
-      );
+      const filtered = APP_DATA.peserta.filter(p => {
+        const regNo = String(p['Nomor Peserta']).toLowerCase();
+        const assignedNo = getDisplayNoPesertaForReg(p['Nomor Peserta']).toLowerCase();
+        return regNo.includes(q) ||
+          assignedNo.includes(q) ||
+          String(p['Nama Regu']).toLowerCase().includes(q) ||
+          String(p['Nomor Kwarran']).toLowerCase().includes(q);
+      });
 
       document.getElementById('tbody-peserta').innerHTML = filtered.length ? filtered.map(p => {
         const kat = getKategoriGudep(p['Nomor Gudep']);
+        const assignedNo = getDisplayNoPesertaForReg(p['Nomor Peserta']);
         return `
           <tr class="hover:bg-stone-50">
             <td class="p-3 font-extrabold text-pramuka-dark">${p['Nomor Peserta']}</td>
+            <td class="p-3 font-black ${assignedNo ? 'text-emerald-700' : 'text-stone-400 italic'}">${assignedNo || 'Belum Reg'}</td>
             <td class="p-3 font-bold">${p['Nama Regu']}</td>
             <td class="p-3">${p['Nomor Kwarran']}</td>
             <td class="p-3">${p['Nomor Gudep']}</td>
@@ -2068,8 +2362,8 @@
               </span>
             </td>
             <td class="p-3 text-center">
-              <button onclick='openIdCardModal(${JSON.stringify(p)}, null, "KARTU IDENTITAS PESERTA")' class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-bold text-[11px]">
-                <i class="fa-solid fa-qrcode mr-1"></i> Kartu ID
+              <button onclick='openIdCardModal(${JSON.stringify(p)}, null, "KARTU REGISTRASI", "REGISTRASI")' class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-bold text-[11px]">
+                <i class="fa-solid fa-qrcode mr-1"></i> Kartu Registrasi
               </button>
             </td>
             <td class="p-3 text-center space-x-1">
@@ -2078,7 +2372,7 @@
             </td>
           </tr>
         `;
-      }).join('') : `<tr><td colspan="7" class="p-6 text-center text-stone-400">Belum ada data peserta</td></tr>`;
+      }).join('') : `<tr><td colspan="8" class="p-6 text-center text-stone-400">Belum ada data peserta</td></tr>`;
     }
 
     function renderUsersTable() {
@@ -2101,17 +2395,26 @@
     }
 
     // =========================================================
-    // LAPORAN & EXPORT PDF (TERPISAH PUTRA & PUTRI)
+    // LAPORAN & EXPORT PDF (TERPISAH PUTRA & PUTRI + PER KELOMPOK)
     // =========================================================
+    function onFilterLaporanChange() {
+      const mode = document.getElementById('filter-laporan-lomba').value;
+      const kelDropdown = document.getElementById('filter-laporan-kelompok');
+      if (mode === 'REKAP_KELOMPOK') {
+        kelDropdown.classList.remove('hidden');
+      } else {
+        kelDropdown.classList.add('hidden');
+      }
+      renderLaporanTable();
+    }
+
     function getLaporanDataset() {
       const genderFilter = document.getElementById('filter-laporan-gender').value; // PUTRA | PUTRI
-      const mode = document.getElementById('filter-laporan-lomba').value; // REKAP_REGU | ALL | <Nama Lomba>
+      const mode = document.getElementById('filter-laporan-lomba').value; // REKAP_REGU | REKAP_KELOMPOK | ALL | <Nama Lomba>
 
-      const labelGender = genderFilter === 'PUTRA'
-        ? 'REGU PUTRA (GUDEP GANJIL)'
-        : 'REGU PUTRI (GUDEP GENAP)';
+      const labelGender = genderFilter === 'PUTRA' ? 'REGU PUTRA' : 'REGU PUTRI';
 
-      // Filter penilaian berdasarkan nomor gudep peserta (Ganjil = Putra, Genap = Putri)
+      // Filter penilaian berdasarkan kategori Putra / Putri
       const filteredByGender = APP_DATA.penilaian.filter(n => {
         const kat = getPesertaKategori(n['Nomor Peserta']);
         return kat === genderFilter;
@@ -2120,20 +2423,22 @@
       if (mode === 'REKAP_REGU') {
         const map = {};
         filteredByGender.forEach(n => {
-          const no = String(n['Nomor Peserta']).trim();
-          const pInfo = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim() === no);
-          if (!map[no]) {
-            map[no] = {
-              noPeserta: no,
-              namaRegu: n['Nama Regu'],
-              kwarran: n['Nomor Kwarran'],
+          const pInfo = findPesertaByAnyNumber(n['Nomor Peserta']);
+          const assignedNo = pInfo ? (getDisplayNoPesertaForReg(pInfo['Nomor Peserta']) || String(n['Nomor Peserta']).trim()) : String(n['Nomor Peserta']).trim();
+          const key = assignedNo.toLowerCase();
+
+          if (!map[key]) {
+            map[key] = {
+              noPeserta: assignedNo,
+              namaRegu: pInfo ? pInfo['Nama Regu'] : n['Nama Regu'],
+              kwarran: pInfo ? pInfo['Nomor Kwarran'] : n['Nomor Kwarran'],
               gudep: pInfo ? pInfo['Nomor Gudep'] : '-',
               jumlahLomba: 0,
               akumulasiNilai: 0
             };
           }
-          map[no].jumlahLomba += 1;
-          map[no].akumulasiNilai += parseFloat(n['Total Nilai']) || 0;
+          map[key].jumlahLomba += 1;
+          map[key].akumulasiNilai += parseFloat(n['Total Nilai']) || 0;
         });
 
         const sorted = Object.values(map).sort((a, b) => b.akumulasiNilai - a.akumulasiNilai);
@@ -2141,6 +2446,56 @@
           subtitle: `REKAPITULASI KEJUARAAN ${labelGender}`,
           headers: ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", "No. Gudep", "Jml Lomba", "Total Akumulasi"],
           rows: sorted.map((r, idx) => [idx + 1, r.noPeserta, r.namaRegu, r.kwarran, r.gudep, r.jumlahLomba, r.akumulasiNilai])
+        };
+      }
+
+      if (mode === 'REKAP_KELOMPOK') {
+        const selectedKelompok = document.getElementById('filter-laporan-kelompok').value;
+        // Ambil hanya nama mata lomba yang berada pada kelompok yang dipilih
+        const lombaDiKelompok = APP_DATA.lombaList
+          .filter(l => l.kelompok === selectedKelompok)
+          .map(l => l.nama);
+
+        const filteredKelompok = filteredByGender.filter(n =>
+          lombaDiKelompok.some(namaL => namaL.toLowerCase() === String(n['Nama Lomba'] || '').trim().toLowerCase())
+        );
+
+        const map = {};
+        filteredKelompok.forEach(n => {
+          const pInfo = findPesertaByAnyNumber(n['Nomor Peserta']);
+          const assignedNo = pInfo ? (getDisplayNoPesertaForReg(pInfo['Nomor Peserta']) || String(n['Nomor Peserta']).trim()) : String(n['Nomor Peserta']).trim();
+          const key = assignedNo.toLowerCase();
+
+          if (!map[key]) {
+            map[key] = {
+              noPeserta: assignedNo,
+              namaRegu: pInfo ? pInfo['Nama Regu'] : n['Nama Regu'],
+              kwarran: pInfo ? pInfo['Nomor Kwarran'] : n['Nomor Kwarran'],
+              scoresByLomba: {},
+              totalKelompok: 0
+            };
+          }
+          const lombaName = String(n['Nama Lomba'] || '').trim();
+          const val = parseFloat(n['Total Nilai']) || 0;
+          map[key].scoresByLomba[lombaName] = (map[key].scoresByLomba[lombaName] || 0) + val;
+          map[key].totalKelompok += val;
+        });
+
+        const sorted = Object.values(map).sort((a, b) => b.totalKelompok - a.totalKelompok);
+        const headers = ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", ...lombaDiKelompok, "Total Kelompok"];
+        const rows = sorted.map((r, idx) => [
+          idx + 1,
+          r.noPeserta,
+          r.namaRegu,
+          r.kwarran,
+          ...lombaDiKelompok.map(lName => r.scoresByLomba[lName] !== undefined ? r.scoresByLomba[lName] : 0),
+          r.totalKelompok
+        ]);
+
+        return {
+          subtitle: `REKAP ${selectedKelompok.toUpperCase()} - ${labelGender}`,
+          headers,
+          rows
         };
       }
 
@@ -2155,16 +2510,20 @@
           ? `LAPORAN HASIL PENILAIAN SELURUH MATA LOMBA - ${labelGender}`
           : `HASIL PENILAIAN MATA LOMBA ${mode.toUpperCase()} - ${labelGender}`,
         headers: ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", "Mata Lomba", "Juri 1", "Juri 2", "Total Nilai"],
-        rows: sortedList.map((n, idx) => [
-          idx + 1,
-          n['Nomor Peserta'],
-          n['Nama Regu'],
-          n['Nomor Kwarran'],
-          n['Nama Lomba'],
-          n['Nilai Juri 1'],
-          n['Nilai Juri 2'],
-          n['Total Nilai']
-        ])
+        rows: sortedList.map((n, idx) => {
+          const pInfo = findPesertaByAnyNumber(n['Nomor Peserta']);
+          const displayNo = pInfo ? (getDisplayNoPesertaForReg(pInfo['Nomor Peserta']) || n['Nomor Peserta']) : n['Nomor Peserta'];
+          return [
+            idx + 1,
+            displayNo,
+            n['Nama Regu'],
+            n['Nomor Kwarran'],
+            n['Nama Lomba'],
+            n['Nilai Juri 1'],
+            n['Nilai Juri 2'],
+            n['Total Nilai']
+          ];
+        })
       };
     }
 
