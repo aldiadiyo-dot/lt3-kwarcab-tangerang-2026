@@ -11,8 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <!-- HTML5 QR Code Scanner -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <!-- JsBarcode untuk Cetak Kartu Peserta -->
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <!-- QRCode.js untuk Cetak Kartu ID QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- SheetJS (Excel Import & Template Download) -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <!-- jsPDF & AutoTable untuk Laporan PDF -->
@@ -40,9 +40,65 @@
   </script>
   <style>
     @media print {
-      body * { visibility: hidden; }
-      #print-area, #print-area * { visibility: visible; }
-      #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+      @page {
+        size: auto;
+        margin: 8mm;
+      }
+      body {
+        background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body * {
+        visibility: hidden;
+      }
+      #modal-id-card {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+      #id-card-wrapper {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 auto !important;
+        width: 340px !important;
+        max-width: 340px !important;
+      }
+      #print-area, #print-area * {
+        visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #print-area {
+        position: relative !important;
+        width: 340px !important;
+        margin: 0 auto !important;
+        border: 4px solid #D97706 !important;
+        border-radius: 20px !important;
+        overflow: hidden !important;
+        background: linear-gradient(to bottom, #3E2723, #5D4037, #292524) !important;
+        color: #ffffff !important;
+      }
+      #print-area .bg-white {
+        background-color: #ffffff !important;
+        color: #1c1917 !important;
+      }
+      #print-area .bg-stone-100 {
+        background-color: #f5f5f4 !important;
+      }
+      #print-area .bg-emerald-500 {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+      }
+      #print-area .bg-amber-100 {
+        background-color: #fef3c7 !important;
+        color: #78350f !important;
+      }
+      #card-qrcode-box img, #card-qrcode-box canvas {
+        margin: 0 auto !important;
+        display: block !important;
+      }
     }
     .loader-spin {
       border-top-color: #D97706;
@@ -57,10 +113,9 @@
 <body class="bg-pramuka-light text-stone-800 font-sans min-h-screen flex flex-col">
 
   <!-- ========================================================= -->
-  <!-- KONFIGURASI URL WEB APP GOOGLE APPS SCRIPT (WAJIB DIISI)  -->
+  <!-- KONFIGURASI URL WEB APP GOOGLE APPS SCRIPT                -->
   <!-- ========================================================= -->
   <script>
-    // GANTI URL DI BAWAH INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA
     const API_URL = "https://script.google.com/macros/s/AKfycbzg1SM9fW5tcieO6DX0JrbqqiXd957Z2FyblQN3EdZLWsidfkoFI3sSDqZWGbrVzpBl4w/exec";
   </script>
 
@@ -180,6 +235,9 @@
           <button onclick="switchTab('penilaian')" data-tab="penilaian" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition bg-amber-600/30 text-amber-200">
             <i class="fa-solid fa-star-half-stroke"></i> Penilaian
           </button>
+          <button onclick="switchTab('lomba')" data-tab="lomba" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-trophy"></i> Mata Lomba
+          </button>
           <button onclick="switchTab('peserta')" data-tab="peserta" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-users"></i> Data Peserta
           </button>
@@ -208,6 +266,7 @@
             <div>
               <p class="text-xs font-bold text-stone-500 uppercase">Total Regu Peserta</p>
               <h3 id="stat-total-peserta" class="text-3xl font-extrabold text-pramuka-dark mt-1">0</h3>
+              <p id="stat-gender-split" class="text-[11px] font-semibold text-stone-500 mt-0.5">0 Putra • 0 Putri</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-pramuka-light text-pramuka-primary flex items-center justify-center text-xl">
               <i class="fa-solid fa-flag"></i>
@@ -260,7 +319,7 @@
               <i class="fa-solid fa-arrow-right"></i>
             </button>
             <button onclick="switchTab('laporan')" class="w-full py-3 px-4 bg-stone-700 hover:bg-stone-800 text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
-              <span><i class="fa-solid fa-print mr-2 text-amber-300"></i> Cetak Laporan Hasil PDF</span>
+              <span><i class="fa-solid fa-print mr-2 text-amber-300"></i> Cetak Laporan Putra / Putri PDF</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
           </div>
@@ -291,7 +350,7 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 2: SCAN DAFTAR ULANG (KAMERA & BARCODE SCANNER)   -->
+      <!-- TAB 2: SCAN DAFTAR ULANG (KAMERA & QR SCANNER)        -->
       <!-- ===================================================== -->
       <div id="tab-scan" class="tab-content hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -299,26 +358,26 @@
           <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow space-y-5 border-t-4 border-pramuka-gold">
             <div class="flex items-center justify-between">
               <h2 class="font-extrabold text-pramuka-dark text-base flex items-center gap-2">
-                <i class="fa-solid fa-barcode text-pramuka-gold"></i> Pemindai Daftar Ulang
+                <i class="fa-solid fa-qrcode text-pramuka-gold"></i> Pemindai Daftar Ulang
               </h2>
               <span class="text-[11px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">
                 <i class="fa-solid fa-volume-high mr-1"></i> Suara Aktif
               </span>
             </div>
 
-            <!-- INPUT BARCODE SCANNER EKSTERNAL / MANUAL -->
+            <!-- INPUT BARCODE / QR SCANNER EKSTERNAL / MANUAL -->
             <div class="bg-pramuka-light/70 p-4 rounded-xl border border-pramuka-khaki">
               <label class="block text-xs font-bold text-pramuka-dark uppercase mb-1.5">
-                <i class="fa-solid fa-keyboard mr-1"></i> Barcode Scanner USB / Input Nomor Peserta
+                <i class="fa-solid fa-keyboard mr-1"></i> Scanner USB / Input Nomor Peserta
               </label>
               <form id="form-manual-scan" class="flex gap-2">
-                <input type="text" id="scan-input-code" placeholder="Scan barcode atau ketik No. Peserta..." autocomplete="off"
+                <input type="text" id="scan-input-code" placeholder="Scan QR Code atau ketik No. Peserta..." autocomplete="off"
                   class="flex-1 px-3.5 py-2.5 bg-white border-2 border-pramuka-primary rounded-xl font-bold text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 <button type="submit" class="px-4 py-2.5 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-sm shadow">
                   Proses
                 </button>
               </form>
-              <p class="text-[11px] text-stone-500 mt-1.5">Arahkan kursor di kotak ini jika menggunakan alat barcode scanner tembak.</p>
+              <p class="text-[11px] text-stone-500 mt-1.5">Arahkan kursor di kotak ini jika menggunakan alat scanner eksternal.</p>
             </div>
 
             <!-- KAMERA LAPTOP / HP -->
@@ -339,7 +398,7 @@
               </div>
 
               <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px] flex items-center justify-center text-stone-400 text-xs">
-                Kamera belum aktif. Klik "Nyalakan Kamera" untuk memindai.
+                Kamera belum aktif. Klik "Nyalakan Kamera" untuk memindai QR Code.
               </div>
             </div>
           </div>
@@ -375,17 +434,24 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 3: HALAMAN PENILAIAN (MANUAL & IMPOR EXCEL)       -->
+      <!-- TAB 3: HALAMAN PENILAIAN (MANUAL, EDIT, IMPOR EXCEL)  -->
       <!-- ===================================================== -->
       <div id="tab-penilaian" class="tab-content hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- FORM INPUT PENILAIAN MANUAL -->
+          <!-- FORM INPUT / EDIT PENILAIAN MANUAL -->
           <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-primary space-y-4">
-            <h2 class="font-extrabold text-pramuka-dark text-base flex items-center gap-2 border-b pb-2.5">
-              <i class="fa-solid fa-pen-ruler text-pramuka-gold"></i> Input Penilaian Lomba (Manual)
-            </h2>
+            <div class="flex items-center justify-between border-b pb-2.5">
+              <h2 id="form-penilaian-title" class="font-extrabold text-pramuka-dark text-base flex items-center gap-2">
+                <i class="fa-solid fa-pen-ruler text-pramuka-gold"></i> Input Penilaian Lomba (Manual)
+              </h2>
+              <button type="button" id="btn-batal-edit-nilai" onclick="resetFormPenilaian()" class="hidden px-2.5 py-1 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-lg text-xs">
+                Batal Edit
+              </button>
+            </div>
 
             <form id="form-penilaian" class="space-y-4">
+              <input type="hidden" id="nilai-edit-row-index" value="" />
+
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta *</label>
                 <input type="text" id="nilai-no-peserta" list="list-peserta-options" required placeholder="Ketik atau pilih Nomor Peserta..."
@@ -407,19 +473,16 @@
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Mata Lomba *</label>
-                <input type="text" id="nilai-nama-lomba" list="list-lomba-saran" required placeholder="Contoh: Pionering / PBB / Semaphore / P3K..."
-                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
-                <datalist id="list-lomba-saran">
-                  <option value="Pionering"></option>
-                  <option value="LKBB / PBB Tongkat"></option>
-                  <option value="Semaphore & Morse"></option>
-                  <option value="Pertolongan Pertama (P3K)"></option>
-                  <option value="Menaksir & Peta Pita"></option>
-                  <option value="Tapak Kemah & Administrasi Regu"></option>
-                  <option value="Pentas Seni Budaya"></option>
-                  <option value="Masak Rimba / Bivak"></option>
-                </datalist>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-bold text-stone-600 uppercase">Nama Mata Lomba *</label>
+                  <button type="button" onclick="switchTab('lomba')" class="admin-only text-[11px] font-bold text-pramuka-gold hover:underline">
+                    + Input / Edit Mata Lomba
+                  </button>
+                </div>
+                <select id="nilai-nama-lomba" required
+                  class="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-sm font-semibold bg-white focus:ring-2 focus:ring-pramuka-gold outline-none">
+                  <option value="">-- Pilih Mata Lomba --</option>
+                </select>
               </div>
 
               <div class="grid grid-cols-2 gap-3">
@@ -441,7 +504,7 @@
                 <span id="nilai-total-display" class="text-2xl font-black text-pramuka-gold">0</span>
               </div>
 
-              <button type="submit" class="w-full py-3 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+              <button type="submit" id="btn-submit-nilai" class="w-full py-3 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-floppy-disk text-amber-400"></i> Simpan Nilai ke Spreadsheet
               </button>
             </form>
@@ -489,7 +552,7 @@
               </div>
             </div>
 
-            <!-- TABEL HASIL PENILAIAN TERKINI -->
+            <!-- TABEL HASIL PENILAIAN TERKINI (DENGAN AKSI EDIT & HAPUS) -->
             <div class="bg-white p-6 rounded-2xl shadow space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="font-bold text-pramuka-dark text-sm">Data Penilaian Tersimpan</h3>
@@ -506,7 +569,7 @@
                       <th class="p-2.5 text-center">Juri 1</th>
                       <th class="p-2.5 text-center">Juri 2</th>
                       <th class="p-2.5 text-center">Total</th>
-                      <th class="p-2.5 text-center admin-only">Aksi</th>
+                      <th class="p-2.5 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody id="tbody-penilaian" class="divide-y divide-stone-200"></tbody>
@@ -518,7 +581,56 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 4: DATA PESERTA & CETAK KARTU BARCODE (ADMIN)     -->
+      <!-- TAB BARU: MASTER DATA MATA LOMBA (INPUT & EDIT)       -->
+      <!-- ===================================================== -->
+      <div id="tab-lomba" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-gold h-fit space-y-4">
+            <h2 id="form-lomba-title" class="font-extrabold text-pramuka-dark text-base border-b pb-2">
+              <i class="fa-solid fa-trophy text-pramuka-gold mr-1"></i> Input Nama Mata Lomba
+            </h2>
+            <form id="form-lomba" class="space-y-3.5">
+              <input type="hidden" id="lomba-is-edit" value="false" />
+              <input type="hidden" id="lomba-index" value="" />
+              <div>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Mata Lomba *</label>
+                <input type="text" id="lomba-nama" required placeholder="Contoh: Pionering / Semaphore / Sandi..."
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-pramuka-gold outline-none" />
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button type="submit" class="flex-1 py-2.5 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-sm shadow">
+                  Simpan Mata Lomba
+                </button>
+                <button type="button" onclick="resetFormLomba()" class="px-3.5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-xl text-sm">
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow space-y-4">
+            <div class="border-b pb-3">
+              <h2 class="font-extrabold text-pramuka-dark text-base">Daftar Pilihan Mata Lomba LT III</h2>
+              <p class="text-xs text-stone-500">Daftar mata lomba ini otomatis tampil pada pilihan dropdown di halaman Penilaian dan Laporan.</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-pramuka-dark text-white uppercase">
+                  <tr>
+                    <th class="p-3 w-16">No</th>
+                    <th class="p-3">Nama Mata Lomba</th>
+                    <th class="p-3 text-center w-36">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-lomba" class="divide-y divide-stone-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 4: DATA PESERTA & CETAK KARTU QR CODE (ADMIN)     -->
       <!-- ===================================================== -->
       <div id="tab-peserta" class="tab-content hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -530,7 +642,7 @@
             <form id="form-peserta" class="space-y-3.5">
               <input type="hidden" id="peserta-is-edit" value="false" />
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta (Barcode ID) *</label>
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Peserta (QR Code ID) *</label>
                 <input type="text" id="peserta-nomor" required placeholder="Contoh: LT3-001"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
               </div>
@@ -540,9 +652,10 @@
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Gudep *</label>
-                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01.001 - 01.002"
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Gudep (Ganjil=Putra, Genap=Putri) *</label>
+                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01.001 (Putra) atau 01.002 (Putri)"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                <p class="text-[10px] text-stone-500 mt-1">Akhiran angka ganjil otomatis masuk Putra, angka genap masuk Putri.</p>
               </div>
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Regu *</label>
@@ -565,7 +678,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
               <div>
                 <h2 class="font-extrabold text-pramuka-dark text-base">Master Data Peserta LT III</h2>
-                <p class="text-xs text-stone-500">Tersimpan di sheet <code class="font-bold">DATA PESERTA</code>. Klik ikon kartu untuk melihat/mencetak ID Barcode.</p>
+                <p class="text-xs text-stone-500">Tersimpan di sheet <code class="font-bold">DATA PESERTA</code>. Klik ikon kartu untuk melihat/mencetak ID QR Code.</p>
               </div>
               <input type="text" id="search-peserta" onkeyup="renderPesertaTable()" placeholder="Cari nomor / regu / kwarran..."
                 class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
@@ -579,6 +692,7 @@
                     <th class="p-3">Nama Regu</th>
                     <th class="p-3">Kwarran</th>
                     <th class="p-3">No. Gudep</th>
+                    <th class="p-3 text-center">Kategori</th>
                     <th class="p-3 text-center">Kartu ID</th>
                     <th class="p-3 text-center">Aksi</th>
                   </tr>
@@ -651,20 +765,28 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 6: LAPORAN HASIL & CETAK PDF                      -->
+      <!-- TAB 6: LAPORAN HASIL & CETAK PDF (PUTRA & PUTRI)      -->
       <!-- ===================================================== -->
       <div id="tab-laporan" class="tab-content hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl shadow space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
             <div>
               <h2 class="font-extrabold text-pramuka-dark text-lg">Laporan Hasil Penilaian LT III Kwarcab Tangerang 2026</h2>
-              <p class="text-xs text-stone-500">Filter berdasarkan mata lomba atau cetak rekap akumulasi nilai tertinggi.</p>
+              <p class="text-xs text-stone-500">Pilih kategori Putra (Gudep Ganjil) / Putri (Gudep Genap) serta Rekap Kejuaraan atau Mata Lomba.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <select id="filter-laporan-lomba" onchange="renderLaporanTable()" class="px-3.5 py-2 border border-stone-300 rounded-xl text-xs font-bold outline-none">
-                <option value="ALL">Semua Mata Lomba (Rincian)</option>
-                <option value="REKAP_REGU">Rekap Total Nilai Per Regu (Peringkat)</option>
+              <!-- PILIHAN PUTRA / PUTRI -->
+              <select id="filter-laporan-gender" onchange="renderLaporanTable()" class="px-3.5 py-2 border-2 border-pramuka-primary bg-pramuka-light/60 text-pramuka-dark rounded-xl text-xs font-extrabold outline-none">
+                <option value="PUTRA">Kategori: REGU PUTRA (Gudep Ganjil)</option>
+                <option value="PUTRI">Kategori: REGU PUTRI (Gudep Genap)</option>
               </select>
+
+              <!-- PILIHAN REKAP KEJUARAAN / MATA LOMBA -->
+              <select id="filter-laporan-lomba" onchange="renderLaporanTable()" class="px-3.5 py-2 border border-stone-300 rounded-xl text-xs font-bold outline-none">
+                <option value="REKAP_REGU">Rekap Kejuaraan (Total Nilai Per Regu)</option>
+                <option value="ALL">Semua Mata Lomba (Rincian)</option>
+              </select>
+
               <button onclick="exportLaporanPDF()" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-xs shadow flex items-center gap-2">
                 <i class="fa-solid fa-file-pdf"></i> Cetak / Download PDF
               </button>
@@ -682,7 +804,9 @@
                 <p class="font-bold text-xs md:text-sm text-pramuka-dark uppercase">
                   PANITIA LOMBA TINGKAT REGU PENGGALANG TIGA (LT III) TAHUN 2026
                 </p>
-                <p class="text-[11px] text-stone-600 mt-0.5" id="laporan-subjudul">Laporan Hasil Penilaian Seluruh Mata Lomba</p>
+                <p class="text-xs font-extrabold text-pramuka-gold uppercase mt-1" id="laporan-subjudul">
+                  REKAPITULASI KEJUARAAN REGU PUTRA
+                </p>
               </div>
             </div>
 
@@ -783,11 +907,11 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL POPUP: KARTU ID PESERTA (HASIL SCAN / CETAK ID)     -->
+  <!-- MODAL POPUP: KARTU ID PESERTA (QR CODE & CETAK IDENTIK)   -->
   <!-- ========================================================= -->
   <div id="modal-id-card" class="fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4 backdrop-blur-xs">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-4 border-pramuka-gold animate-bounce-once">
-      <!-- AREA YANG BISA DICETAK -->
+    <div id="id-card-wrapper" class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-4 border-pramuka-gold animate-bounce-once">
+      <!-- AREA YANG BISA DICETAK (IDENTIK 100% DENGAN TAMPILAN LAYAR) -->
       <div id="print-area" class="bg-gradient-to-b from-pramuka-dark via-pramuka-primary to-stone-800 text-white p-6 text-center relative">
         <div class="flex items-center justify-center gap-2.5 mb-3 border-b border-amber-500/40 pb-3">
           <img id="card-logo-img" src="" alt="Logo" class="w-10 h-10 object-contain bg-white rounded-lg p-0.5 hidden" />
@@ -805,9 +929,10 @@
           <p class="text-[10px] font-bold text-stone-400 uppercase">Nomor Peserta</p>
           <h3 id="card-no-peserta" class="text-2xl font-black text-pramuka-dark tracking-wider">LT3-001</h3>
 
-          <div class="border-t border-b border-stone-200 py-2.5 my-2">
+          <div class="border-t border-b border-stone-200 py-2 my-1">
             <p class="text-[10px] font-bold text-stone-400 uppercase">Nama Regu</p>
-            <h4 id="card-nama-regu" class="text-lg font-extrabold text-pramuka-primary uppercase">REGU HARIMAU</h4>
+            <h4 id="card-nama-regu" class="text-lg font-extrabold text-pramuka-primary uppercase leading-tight">REGU HARIMAU</h4>
+            <span id="card-kategori-badge" class="inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-900 uppercase">REGU PUTRA</span>
           </div>
 
           <div class="grid grid-cols-2 gap-2 text-left text-xs pt-1">
@@ -821,9 +946,10 @@
             </div>
           </div>
 
-          <!-- BARCODE RENDER -->
-          <div class="pt-2 flex flex-col items-center">
-            <svg id="card-barcode-svg" class="max-w-full h-14"></svg>
+          <!-- QR CODE RENDER -->
+          <div class="pt-3 flex flex-col items-center justify-center">
+            <div id="card-qrcode-box" class="p-2 bg-white border border-stone-200 rounded-xl flex items-center justify-center"></div>
+            <span id="card-qr-label" class="text-[11px] font-mono font-bold text-stone-600 mt-1.5">LT3-001</span>
           </div>
         </div>
 
@@ -845,12 +971,25 @@
   <!-- JAVASCRIPT APPLICATION LOGIC                              -->
   <!-- ========================================================= -->
   <script>
+    // DAFTAR MATA LOMBA BAWAAN (DAPAT DITAMBAH & DIEDIT ADMIN)
+    const DEFAULT_LOMBA_LIST = [
+      "Pionering",
+      "LKBB / PBB Tongkat",
+      "Semaphore & Morse",
+      "Pertolongan Pertama (P3K)",
+      "Menaksir & Peta Pita",
+      "Tapak Kemah & Administrasi Regu",
+      "Pentas Seni Budaya",
+      "Masak Rimba / Bivak"
+    ];
+
     // STATE GLOBAL APLIKASI
     let APP_DATA = {
       users: [],
       peserta: [],
       daftarUlang: [],
       penilaian: [],
+      lombaList: [],
       settings: {}
     };
     let CURRENT_USER = null;
@@ -858,6 +997,24 @@
     let currentFacingMode = "environment";
     let isScanningLocked = false;
     let excelBatchBuffer = [];
+
+    // =========================================================
+    // HELPER: KATEGORI PUTRA (GUDEP GANJIL) / PUTRI (GUDEP GENAP)
+    // =========================================================
+    function getKategoriGudep(nomorGudep) {
+      const str = String(nomorGudep || '').trim();
+      const matches = str.match(/\d+/g);
+      if (!matches || matches.length === 0) return 'PUTRA';
+      const lastNumber = matches[matches.length - 1];
+      const lastDigit = parseInt(lastNumber.slice(-1), 10);
+      return (lastDigit % 2 === 1) ? 'PUTRA' : 'PUTRI';
+    }
+
+    function getPesertaKategori(noPeserta) {
+      const found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim() === String(noPeserta).trim());
+      if (!found) return 'PUTRA';
+      return getKategoriGudep(found['Nomor Gudep']);
+    }
 
     // =========================================================
     // INISIALISASI SAAT HALAMAN DIMUAT
@@ -931,6 +1088,24 @@
           APP_DATA.daftarUlang = res.daftarUlang || [];
           APP_DATA.penilaian = res.penilaian || [];
           APP_DATA.settings = res.settings || {};
+
+          // Muat daftar mata lomba dari pengaturan server / localStorage / default
+          let savedLomba = [];
+          if (APP_DATA.settings.daftarMataLomba) {
+            try {
+              savedLomba = JSON.parse(APP_DATA.settings.daftarMataLomba);
+            } catch (e) {}
+          }
+          if (!Array.isArray(savedLomba) || savedLomba.length === 0) {
+            const localCache = localStorage.getItem('lt3_mata_lomba');
+            savedLomba = localCache ? JSON.parse(localCache) : [...DEFAULT_LOMBA_LIST];
+          }
+          // Gabungkan juga mata lomba yang sudah ada di data penilaian agar tidak hilang
+          APP_DATA.penilaian.forEach(n => {
+            const nama = String(n['Nama Lomba'] || '').trim();
+            if (nama && !savedLomba.includes(nama)) savedLomba.push(nama);
+          });
+          APP_DATA.lombaList = savedLomba;
 
           applySettingsToUI();
           refreshAllViews();
@@ -1071,7 +1246,7 @@
     }
 
     // =========================================================
-    // FITUR SCAN DAFTAR ULANG (KAMERA + BARCODE USB)
+    // FITUR SCAN DAFTAR ULANG (KAMERA + QR SCANNER)
     // =========================================================
     document.getElementById('form-manual-scan').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1094,7 +1269,7 @@
 
         await html5QrCode.start(
           { facingMode: currentFacingMode },
-          { fps: 10, qrbox: { width: 240, height: 150 } },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
           (decodedText) => {
             if (!isScanningLocked) {
               isScanningLocked = true;
@@ -1152,7 +1327,7 @@
           speakText(kalimat);
           showToast(kalimat, 'success');
 
-          // Tampilkan Kartu ID Digital
+          // Tampilkan Kartu ID Digital dengan QR Code
           openIdCardModal(p, res.timestamp, "TERDAFTAR ULANG");
 
           // Update state lokal & tabel
@@ -1187,26 +1362,32 @@
     }
 
     // =========================================================
-    // KARTU ID DIGITAL MODAL & BARCODE GENERATOR
+    // KARTU ID DIGITAL MODAL & QR CODE GENERATOR
     // =========================================================
     function openIdCardModal(peserta, timestamp = null, badgeText = "KARTU PESERTA LT III") {
-      document.getElementById('card-no-peserta').textContent = peserta['Nomor Peserta'];
+      const noPeserta = String(peserta['Nomor Peserta']).trim();
+      const kategori = getKategoriGudep(peserta['Nomor Gudep']);
+
+      document.getElementById('card-no-peserta').textContent = noPeserta;
       document.getElementById('card-nama-regu').textContent = peserta['Nama Regu'];
       document.getElementById('card-kwarran').textContent = peserta['Nomor Kwarran'];
       document.getElementById('card-gudep').textContent = peserta['Nomor Gudep'];
+      document.getElementById('card-kategori-badge').textContent = `REGU ${kategori}`;
+      document.getElementById('card-qr-label').textContent = noPeserta;
       document.getElementById('card-status-badge').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${badgeText}`;
       document.getElementById('card-timestamp').textContent = timestamp ? `Waktu Daftar Ulang: ${timestamp}` : 'LT III Kwarcab Tangerang Tahun 2026';
 
-      try {
-        JsBarcode("#card-barcode-svg", String(peserta['Nomor Peserta']), {
-          format: "CODE128",
-          lineColor: "#1c1917",
-          width: 2,
-          height: 45,
-          displayValue: true,
-          fontSize: 12
-        });
-      } catch (e) {}
+      // Render QR Code
+      const qrBox = document.getElementById('card-qrcode-box');
+      qrBox.innerHTML = '';
+      new QRCode(qrBox, {
+        text: noPeserta,
+        width: 116,
+        height: 116,
+        colorDark: "#1c1917",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
 
       const modal = document.getElementById('modal-id-card');
       modal.classList.remove('hidden');
@@ -1221,14 +1402,101 @@
     }
 
     // =========================================================
-    // PENILAIAN (MANUAL + KALKULASI OTOMATIS + IMPOR EXCEL)
+    // MASTER DATA MATA LOMBA (INPUT, EDIT, HAPUS)
+    // =========================================================
+    document.getElementById('form-lomba').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const isEdit = document.getElementById('lomba-is-edit').value === 'true';
+      const idx = parseInt(document.getElementById('lomba-index').value, 10);
+      const namaBaru = document.getElementById('lomba-nama').value.trim();
+      if (!namaBaru) return;
+
+      if (isEdit && !isNaN(idx) && APP_DATA.lombaList[idx] !== undefined) {
+        APP_DATA.lombaList[idx] = namaBaru;
+      } else {
+        if (APP_DATA.lombaList.some(l => l.toLowerCase() === namaBaru.toLowerCase())) {
+          showToast("Nama mata lomba sudah ada!", "warning");
+          return;
+        }
+        APP_DATA.lombaList.push(namaBaru);
+      }
+
+      await persistLombaListToServer();
+      resetFormLomba();
+      refreshAllViews();
+    });
+
+    function editLomba(index) {
+      const nama = APP_DATA.lombaList[index];
+      if (!nama) return;
+      document.getElementById('lomba-is-edit').value = 'true';
+      document.getElementById('lomba-index').value = index;
+      document.getElementById('lomba-nama').value = nama;
+      document.getElementById('form-lomba-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600 mr-1"></i> Edit Nama Mata Lomba`;
+    }
+
+    function resetFormLomba() {
+      document.getElementById('form-lomba').reset();
+      document.getElementById('lomba-is-edit').value = 'false';
+      document.getElementById('lomba-index').value = '';
+      document.getElementById('form-lomba-title').innerHTML = `<i class="fa-solid fa-trophy text-pramuka-gold mr-1"></i> Input Nama Mata Lomba`;
+    }
+
+    async function deleteLomba(index) {
+      const nama = APP_DATA.lombaList[index];
+      if (!confirm(`Hapus mata lomba "${nama}" dari daftar pilihan?`)) return;
+      APP_DATA.lombaList.splice(index, 1);
+      await persistLombaListToServer();
+      refreshAllViews();
+    }
+
+    async function persistLombaListToServer() {
+      localStorage.setItem('lt3_mata_lomba', JSON.stringify(APP_DATA.lombaList));
+      APP_DATA.settings.daftarMataLomba = JSON.stringify(APP_DATA.lombaList);
+      showLoader("Menyimpan daftar mata lomba...");
+      try {
+        await apiCall({
+          action: 'saveSettings',
+          settings: {
+            daftarMataLomba: JSON.stringify(APP_DATA.lombaList)
+          }
+        });
+        showToast("Daftar mata lomba berhasil diperbarui!");
+      } catch (e) {
+        showToast("Tersimpan secara lokal", "warning");
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function renderLombaTable() {
+      const tbody = document.getElementById('tbody-lomba');
+      tbody.innerHTML = APP_DATA.lombaList.length ? APP_DATA.lombaList.map((nama, idx) => `
+        <tr class="hover:bg-stone-50">
+          <td class="p-3 font-bold text-stone-500">${idx + 1}</td>
+          <td class="p-3 font-bold text-pramuka-dark">${nama}</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="editLomba(${idx})" class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" title="Edit Mata Lomba">
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
+            <button onclick="deleteLomba(${idx})" class="px-2.5 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Hapus Mata Lomba">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('') : `<tr><td colspan="3" class="p-6 text-center text-stone-400">Belum ada mata lomba</td></tr>`;
+    }
+
+    // =========================================================
+    // PENILAIAN (INPUT MANUAL + EDIT BARIS + IMPOR EXCEL)
     // =========================================================
     function autoFillPesertaNilai() {
       const no = document.getElementById('nilai-no-peserta').value.trim();
       const found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === no.toLowerCase());
       if (found) {
+        const kat = getKategoriGudep(found['Nomor Gudep']);
         document.getElementById('nilai-nama-regu').value = found['Nama Regu'];
-        document.getElementById('nilai-kwarran').value = found['Nomor Kwarran'];
+        document.getElementById('nilai-kwarran').value = `${found['Nomor Kwarran']} (${kat})`;
       } else {
         document.getElementById('nilai-nama-regu').value = '';
         document.getElementById('nilai-kwarran').value = '';
@@ -1242,17 +1510,67 @@
       document.getElementById('nilai-total-display').textContent = Number.isInteger(total) ? total : total.toFixed(2);
     }
 
+    function editPenilaian(rowIndex) {
+      const item = APP_DATA.penilaian.find(n => Number(n._rowIndex) === Number(rowIndex));
+      if (!item) return;
+
+      document.getElementById('nilai-edit-row-index').value = item._rowIndex;
+      document.getElementById('nilai-no-peserta').value = item['Nomor Peserta'];
+      autoFillPesertaNilai();
+      if (!document.getElementById('nilai-nama-regu').value) {
+        document.getElementById('nilai-nama-regu').value = item['Nama Regu'];
+        document.getElementById('nilai-kwarran').value = item['Nomor Kwarran'];
+      }
+
+      const selectLomba = document.getElementById('nilai-nama-lomba');
+      const namaLomba = String(item['Nama Lomba']).trim();
+      if (![...selectLomba.options].some(o => o.value === namaLomba)) {
+        const opt = document.createElement('option');
+        opt.value = namaLomba;
+        opt.textContent = namaLomba;
+        selectLomba.appendChild(opt);
+      }
+      selectLomba.value = namaLomba;
+
+      document.getElementById('nilai-juri-1').value = item['Nilai Juri 1'];
+      document.getElementById('nilai-juri-2').value = item['Nilai Juri 2'];
+      hitungTotalNilai();
+
+      document.getElementById('form-penilaian-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600"></i> Edit Data Penilaian (${item['Nomor Peserta']})`;
+      document.getElementById('btn-batal-edit-nilai').classList.remove('hidden');
+      document.getElementById('btn-submit-nilai').innerHTML = `<i class="fa-solid fa-check text-amber-400"></i> Simpan Perubahan Nilai`;
+      document.getElementById('form-penilaian').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetFormPenilaian() {
+      document.getElementById('form-penilaian').reset();
+      document.getElementById('nilai-edit-row-index').value = '';
+      document.getElementById('nilai-nama-regu').value = '';
+      document.getElementById('nilai-kwarran').value = '';
+      document.getElementById('nilai-total-display').textContent = '0';
+      document.getElementById('form-penilaian-title').innerHTML = `<i class="fa-solid fa-pen-ruler text-pramuka-gold"></i> Input Penilaian Lomba (Manual)`;
+      document.getElementById('btn-batal-edit-nilai').classList.add('hidden');
+      document.getElementById('btn-submit-nilai').innerHTML = `<i class="fa-solid fa-floppy-disk text-amber-400"></i> Simpan Nilai ke Spreadsheet`;
+    }
+
     document.getElementById('form-penilaian').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const editRowIndex = document.getElementById('nilai-edit-row-index').value;
       const noPeserta = document.getElementById('nilai-no-peserta').value.trim();
       const namaRegu = document.getElementById('nilai-nama-regu').value.trim() || 'Peserta Umum';
-      const kwarran = document.getElementById('nilai-kwarran').value.trim() || '-';
+      const foundP = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === noPeserta.toLowerCase());
+      const kwarran = foundP ? foundP['Nomor Kwarran'] : (document.getElementById('nilai-kwarran').value.trim() || '-');
       const namaLomba = document.getElementById('nilai-nama-lomba').value.trim();
       const j1 = parseFloat(document.getElementById('nilai-juri-1').value) || 0;
       const j2 = parseFloat(document.getElementById('nilai-juri-2').value) || 0;
 
-      showLoader("Menyimpan nilai ke Google Sheets...");
+      showLoader(editRowIndex ? "Memperbarui data penilaian..." : "Menyimpan nilai ke Google Sheets...");
       try {
+        // Jika mode edit, hapus baris lama lalu simpan data terbaru agar tetap kompatibel 100% dengan Code.gs
+        if (editRowIndex) {
+          await apiCall({ action: 'deletePenilaian', rowIndex: Number(editRowIndex) });
+        }
+
         const res = await apiCall({
           action: 'savePenilaian',
           data: {
@@ -1267,13 +1585,8 @@
         });
 
         if (res.status === 'success') {
-          showToast(res.message);
-          document.getElementById('nilai-no-peserta').value = '';
-          document.getElementById('nilai-nama-regu').value = '';
-          document.getElementById('nilai-kwarran').value = '';
-          document.getElementById('nilai-juri-1').value = '';
-          document.getElementById('nilai-juri-2').value = '';
-          document.getElementById('nilai-total-display').textContent = '0';
+          showToast(editRowIndex ? "Data penilaian berhasil diperbarui!" : res.message);
+          resetFormPenilaian();
           await syncAllData(false);
         } else {
           showToast(res.message, 'error');
@@ -1287,9 +1600,10 @@
 
     // DOWNLOAD TEMPLATE EXCEL
     function downloadTemplateExcel() {
+      const sampleLomba = APP_DATA.lombaList.length > 0 ? APP_DATA.lombaList[0] : "Pionering";
       const sampleData = [
-        { "Nomor Peserta": "LT3-001", "Nama Lomba": "Pionering", "Nilai Juri 1": 85, "Nilai Juri 2": 88 },
-        { "Nomor Peserta": "LT3-002", "Nama Lomba": "Pionering", "Nilai Juri 1": 90, "Nilai Juri 2": 87 }
+        { "Nomor Peserta": "LT3-001", "Nama Lomba": sampleLomba, "Nilai Juri 1": 85, "Nilai Juri 2": 88 },
+        { "Nomor Peserta": "LT3-002", "Nama Lomba": sampleLomba, "Nilai Juri 1": 90, "Nilai Juri 2": 87 }
       ];
       const ws = XLSX.utils.json_to_sheet(sampleData);
       const wb = XLSX.utils.book_new();
@@ -1527,7 +1841,6 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      // Resize gambar agar ringan disimpan di Google Sheets (< 45KB Base64)
       const reader = new FileReader();
       reader.onload = function (e) {
         const img = new Image();
@@ -1563,7 +1876,8 @@
         jabatanKetua: document.getElementById('set-jabatan-ketua').value.trim(),
         namaKetua: document.getElementById('set-nama-ketua').value.trim(),
         jabatanJuri: document.getElementById('set-jabatan-juri').value.trim(),
-        namaJuri: document.getElementById('set-nama-juri').value.trim()
+        namaJuri: document.getElementById('set-nama-juri').value.trim(),
+        daftarMataLomba: JSON.stringify(APP_DATA.lombaList)
       };
 
       showLoader("Menyimpan pengaturan ke Google Sheets...");
@@ -1619,10 +1933,13 @@
     // RENDER SEMUA TABEL & STATISTIK
     // =========================================================
     function refreshAllViews() {
-      // Statistik Dashboard
       const totalP = APP_DATA.peserta.length;
       const totalDU = APP_DATA.daftarUlang.length;
+      const countPutra = APP_DATA.peserta.filter(p => getKategoriGudep(p['Nomor Gudep']) === 'PUTRA').length;
+      const countPutri = totalP - countPutra;
+
       document.getElementById('stat-total-peserta').textContent = totalP;
+      document.getElementById('stat-gender-split').textContent = `${countPutra} Putra • ${countPutri} Putri`;
       document.getElementById('stat-sudah-hadir').textContent = totalDU;
       document.getElementById('stat-belum-hadir').textContent = Math.max(0, totalP - totalDU);
       document.getElementById('stat-total-nilai').textContent = APP_DATA.penilaian.length;
@@ -1630,33 +1947,49 @@
       // Log terbaru dashboard
       const dashTbody = document.getElementById('dashboard-du-tbody');
       const recentDU = [...APP_DATA.daftarUlang].reverse().slice(0, 8);
-      dashTbody.innerHTML = recentDU.length ? recentDU.map(d => `
-        <tr>
-          <td class="p-2.5 text-stone-500">${d['Timestamp']}</td>
-          <td class="p-2.5 font-bold text-pramuka-dark">${d['Nomor Peserta']}</td>
-          <td class="p-2.5 font-semibold">${d['Nama Regu']}</td>
-          <td class="p-2.5">${d['Nomor Kwarran']} / ${d['Nomor Gudep']}</td>
-          <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">${d['Status']}</span></td>
-        </tr>
-      `).join('') : `<tr><td colspan="5" class="p-4 text-center text-stone-400">Belum ada peserta daftar ulang</td></tr>`;
+      dashTbody.innerHTML = recentDU.length ? recentDU.map(d => {
+        const kat = getKategoriGudep(d['Nomor Gudep']);
+        return `
+          <tr>
+            <td class="p-2.5 text-stone-500">${d['Timestamp']}</td>
+            <td class="p-2.5 font-bold text-pramuka-dark">${d['Nomor Peserta']}</td>
+            <td class="p-2.5 font-semibold">${d['Nama Regu']}</td>
+            <td class="p-2.5">${d['Nomor Kwarran']} / ${d['Nomor Gudep']} <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${kat === 'PUTRA' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">${kat}</span></td>
+            <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">${d['Status']}</span></td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="5" class="p-4 text-center text-stone-400">Belum ada peserta daftar ulang</td></tr>`;
 
       // Datalist Peserta pada Form Penilaian
       const dl = document.getElementById('list-peserta-options');
       dl.innerHTML = APP_DATA.peserta.map(p => `<option value="${p['Nomor Peserta']}">${p['Nama Regu']} - ${p['Nomor Kwarran']}</option>`).join('');
 
+      // Populate Dropdown Mata Lomba pada Form Penilaian
+      const selectLomba = document.getElementById('nilai-nama-lomba');
+      const currentSelectedLomba = selectLomba.value;
+      selectLomba.innerHTML = `<option value="">-- Pilih Mata Lomba --</option>` +
+        APP_DATA.lombaList.map(l => `<option value="${l}">${l}</option>`).join('');
+      if (APP_DATA.lombaList.includes(currentSelectedLomba)) {
+        selectLomba.value = currentSelectedLomba;
+      }
+
       // Populate Filter Lomba pada Laporan
       const filterSelect = document.getElementById('filter-laporan-lomba');
       const currentVal = filterSelect.value;
-      const uniqueLomba = [...new Set(APP_DATA.penilaian.map(n => n['Nama Lomba']).filter(Boolean))];
+      const allLombaSet = new Set([
+        ...APP_DATA.lombaList,
+        ...APP_DATA.penilaian.map(n => n['Nama Lomba']).filter(Boolean)
+      ]);
       filterSelect.innerHTML = `
+        <option value="REKAP_REGU">Rekap Kejuaraan (Total Nilai Per Regu)</option>
         <option value="ALL">Semua Mata Lomba (Rincian)</option>
-        <option value="REKAP_REGU">Rekap Total Nilai Per Regu (Peringkat Kejuaraan)</option>
-        ${uniqueLomba.map(l => `<option value="${l}">Mata Lomba: ${l}</option>`).join('')}
+        ${[...allLombaSet].map(l => `<option value="${l}">Mata Lomba: ${l}</option>`).join('')}
       `;
       if ([...filterSelect.options].some(o => o.value === currentVal)) filterSelect.value = currentVal;
 
       renderDaftarUlangTable();
       renderPenilaianTable();
+      renderLombaTable();
       renderPesertaTable();
       renderUsersTable();
       renderLaporanTable();
@@ -1669,16 +2002,19 @@
         String(d['Nama Regu']).toLowerCase().includes(q) ||
         String(d['Nomor Kwarran']).toLowerCase().includes(q)
       );
-      document.getElementById('tbody-daftar-ulang').innerHTML = filtered.length ? filtered.map(d => `
-        <tr class="hover:bg-stone-50">
-          <td class="p-3 text-stone-500">${d['Timestamp']}</td>
-          <td class="p-3 font-extrabold text-pramuka-dark">${d['Nomor Peserta']}</td>
-          <td class="p-3 font-bold">${d['Nama Regu']}</td>
-          <td class="p-3">${d['Nomor Kwarran']}</td>
-          <td class="p-3">${d['Nomor Gudep']}</td>
-          <td class="p-3 text-stone-500">${d['Petugas Scan']}</td>
-        </tr>
-      `).join('') : `<tr><td colspan="6" class="p-6 text-center text-stone-400">Data daftar ulang tidak ditemukan</td></tr>`;
+      document.getElementById('tbody-daftar-ulang').innerHTML = filtered.length ? filtered.map(d => {
+        const kat = getKategoriGudep(d['Nomor Gudep']);
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="p-3 text-stone-500">${d['Timestamp']}</td>
+            <td class="p-3 font-extrabold text-pramuka-dark">${d['Nomor Peserta']}</td>
+            <td class="p-3 font-bold">${d['Nama Regu']}</td>
+            <td class="p-3">${d['Nomor Kwarran']}</td>
+            <td class="p-3">${d['Nomor Gudep']} <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${kat === 'PUTRA' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">${kat}</span></td>
+            <td class="p-3 text-stone-500">${d['Petugas Scan']}</td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="6" class="p-6 text-center text-stone-400">Data daftar ulang tidak ditemukan</td></tr>`;
     }
 
     function renderPenilaianTable() {
@@ -1698,8 +2034,11 @@
           <td class="p-2.5 text-center">${n['Nilai Juri 1']}</td>
           <td class="p-2.5 text-center">${n['Nilai Juri 2']}</td>
           <td class="p-2.5 text-center font-extrabold text-emerald-700">${n['Total Nilai']}</td>
-          <td class="p-2.5 text-center ${isAdmin ? '' : 'hidden'}">
-            <button onclick="deletePenilaian(${n._rowIndex})" class="text-red-600 hover:text-red-800 px-2 py-1" title="Hapus">
+          <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+            <button onclick="editPenilaian(${n._rowIndex})" class="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded" title="Edit Nilai">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button onclick="deletePenilaian(${n._rowIndex})" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded ${isAdmin ? '' : 'hidden'}" title="Hapus">
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>
@@ -1715,23 +2054,31 @@
         String(p['Nomor Kwarran']).toLowerCase().includes(q)
       );
 
-      document.getElementById('tbody-peserta').innerHTML = filtered.length ? filtered.map(p => `
-        <tr class="hover:bg-stone-50">
-          <td class="p-3 font-extrabold text-pramuka-dark">${p['Nomor Peserta']}</td>
-          <td class="p-3 font-bold">${p['Nama Regu']}</td>
-          <td class="p-3">${p['Nomor Kwarran']}</td>
-          <td class="p-3">${p['Nomor Gudep']}</td>
-          <td class="p-3 text-center">
-            <button onclick='openIdCardModal(${JSON.stringify(p)}, null, "KARTU IDENTITAS PESERTA")' class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-bold text-[11px]">
-              <i class="fa-solid fa-id-card mr-1"></i> Kartu ID
-            </button>
-          </td>
-          <td class="p-3 text-center space-x-1">
-            <button onclick="editPeserta('${p['Nomor Peserta']}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deletePeserta('${p['Nomor Peserta']}')" class="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('') : `<tr><td colspan="6" class="p-6 text-center text-stone-400">Belum ada data peserta</td></tr>`;
+      document.getElementById('tbody-peserta').innerHTML = filtered.length ? filtered.map(p => {
+        const kat = getKategoriGudep(p['Nomor Gudep']);
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="p-3 font-extrabold text-pramuka-dark">${p['Nomor Peserta']}</td>
+            <td class="p-3 font-bold">${p['Nama Regu']}</td>
+            <td class="p-3">${p['Nomor Kwarran']}</td>
+            <td class="p-3">${p['Nomor Gudep']}</td>
+            <td class="p-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${kat === 'PUTRA' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">
+                ${kat}
+              </span>
+            </td>
+            <td class="p-3 text-center">
+              <button onclick='openIdCardModal(${JSON.stringify(p)}, null, "KARTU IDENTITAS PESERTA")' class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-bold text-[11px]">
+                <i class="fa-solid fa-qrcode mr-1"></i> Kartu ID
+              </button>
+            </td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="editPeserta('${p['Nomor Peserta']}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deletePeserta('${p['Nomor Peserta']}')" class="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="7" class="p-6 text-center text-stone-400">Belum ada data peserta</td></tr>`;
     }
 
     function renderUsersTable() {
@@ -1754,20 +2101,33 @@
     }
 
     // =========================================================
-    // LAPORAN & EXPORT PDF (jsPDF)
+    // LAPORAN & EXPORT PDF (TERPISAH PUTRA & PUTRI)
     // =========================================================
     function getLaporanDataset() {
-      const mode = document.getElementById('filter-laporan-lomba').value;
+      const genderFilter = document.getElementById('filter-laporan-gender').value; // PUTRA | PUTRI
+      const mode = document.getElementById('filter-laporan-lomba').value; // REKAP_REGU | ALL | <Nama Lomba>
+
+      const labelGender = genderFilter === 'PUTRA'
+        ? 'REGU PUTRA (GUDEP GANJIL)'
+        : 'REGU PUTRI (GUDEP GENAP)';
+
+      // Filter penilaian berdasarkan nomor gudep peserta (Ganjil = Putra, Genap = Putri)
+      const filteredByGender = APP_DATA.penilaian.filter(n => {
+        const kat = getPesertaKategori(n['Nomor Peserta']);
+        return kat === genderFilter;
+      });
 
       if (mode === 'REKAP_REGU') {
         const map = {};
-        APP_DATA.penilaian.forEach(n => {
+        filteredByGender.forEach(n => {
           const no = String(n['Nomor Peserta']).trim();
+          const pInfo = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim() === no);
           if (!map[no]) {
             map[no] = {
               noPeserta: no,
               namaRegu: n['Nama Regu'],
               kwarran: n['Nomor Kwarran'],
+              gudep: pInfo ? pInfo['Nomor Gudep'] : '-',
               jumlahLomba: 0,
               akumulasiNilai: 0
             };
@@ -1778,21 +2138,23 @@
 
         const sorted = Object.values(map).sort((a, b) => b.akumulasiNilai - a.akumulasiNilai);
         return {
-          subtitle: "REKAPITULASI PERINGKAT KEJUARAAN REGU",
-          headers: ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", "Jml Lomba", "Total Akumulasi"],
-          rows: sorted.map((r, idx) => [idx + 1, r.noPeserta, r.namaRegu, r.kwarran, r.jumlahLomba, r.akumulasiNilai])
+          subtitle: `REKAPITULASI KEJUARAAN ${labelGender}`,
+          headers: ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", "No. Gudep", "Jml Lomba", "Total Akumulasi"],
+          rows: sorted.map((r, idx) => [idx + 1, r.noPeserta, r.namaRegu, r.kwarran, r.gudep, r.jumlahLomba, r.akumulasiNilai])
         };
       }
 
       const list = mode === 'ALL'
-        ? APP_DATA.penilaian
-        : APP_DATA.penilaian.filter(n => n['Nama Lomba'] === mode);
+        ? filteredByGender
+        : filteredByGender.filter(n => n['Nama Lomba'] === mode);
 
       const sortedList = [...list].sort((a, b) => (parseFloat(b['Total Nilai']) || 0) - (parseFloat(a['Total Nilai']) || 0));
 
       return {
-        subtitle: mode === 'ALL' ? "LAPORAN HASIL PENILAIAN SELURUH MATA LOMBA" : `LAPORAN HASIL PENILAIAN MATA LOMBA: ${mode.toUpperCase()}`,
-        headers: ["No", "No. Peserta", "Nama Regu", "Kwarran", "Mata Lomba", "Juri 1", "Juri 2", "Total Nilai"],
+        subtitle: mode === 'ALL'
+          ? `LAPORAN HASIL PENILAIAN SELURUH MATA LOMBA - ${labelGender}`
+          : `HASIL PENILAIAN MATA LOMBA ${mode.toUpperCase()} - ${labelGender}`,
+        headers: ["Peringkat", "No. Peserta", "Nama Regu", "Kwarran", "Mata Lomba", "Juri 1", "Juri 2", "Total Nilai"],
         rows: sortedList.map((n, idx) => [
           idx + 1,
           n['Nomor Peserta'],
@@ -1813,7 +2175,7 @@
       document.getElementById('thead-laporan').innerHTML = `<tr>${dataset.headers.map(h => `<th class="p-2.5">${h}</th>`).join('')}</tr>`;
       document.getElementById('tbody-laporan').innerHTML = dataset.rows.length
         ? dataset.rows.map(r => `<tr>${r.map((c, i) => `<td class="p-2.5 ${i === r.length - 1 ? 'font-extrabold text-pramuka-dark' : ''}">${c}</td>`).join('')}</tr>`).join('')
-        : `<tr><td colspan="${dataset.headers.length}" class="p-6 text-center text-stone-400">Belum ada data penilaian untuk dicetak</td></tr>`;
+        : `<tr><td colspan="${dataset.headers.length}" class="p-6 text-center text-stone-400">Belum ada data penilaian pada kategori ini</td></tr>`;
     }
 
     function exportLaporanPDF() {
@@ -1821,6 +2183,7 @@
       const doc = new jsPDF('p', 'mm', 'a4');
       const s = APP_DATA.settings || {};
       const dataset = getLaporanDataset();
+      const genderFilter = document.getElementById('filter-laporan-gender').value;
 
       // Logo di Kop Surat (jika tersedia)
       if (s.logo && s.logo.startsWith('data:image')) {
@@ -1835,8 +2198,7 @@
       doc.text("GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG", 112, 16, { align: "center" });
       doc.setFontSize(11);
       doc.text("LOMBA TINGKAT REGU PENGGALANG TIGA (LT III) TAHUN 2026", 112, 22, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
+      doc.setFontSize(9.5);
       doc.text(dataset.subtitle, 112, 28, { align: "center" });
 
       doc.setLineWidth(0.7);
@@ -1872,7 +2234,7 @@
       doc.text(s.namaKetua || "( .................................... )", 48, finalY + 26, { align: "center" });
       doc.text(s.namaJuri || "( .................................... )", 155, finalY + 26, { align: "center" });
 
-      doc.save(`Laporan_LT3_Kwarcab_Tangerang_2026.pdf`);
+      doc.save(`Laporan_LT3_${genderFilter}_Kwarcab_Tangerang_2026.pdf`);
     }
   </script>
 </body>
