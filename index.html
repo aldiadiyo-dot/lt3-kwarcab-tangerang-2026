@@ -226,10 +226,10 @@
       <!-- NAVIGATION BAR -->
       <nav class="bg-pramuka-primary/90 border-t border-stone-700 overflow-x-auto">
         <div class="max-w-7xl mx-auto px-4 flex space-x-1 py-1.5 text-xs font-bold whitespace-nowrap">
-          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-chart-pie"></i> Dashboard
           </button>
-          <button onclick="switchTab('scan')" data-tab="scan" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+          <button onclick="switchTab('scan')" data-tab="scan" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-qrcode"></i> Scan Daftar Ulang
           </button>
           <button onclick="switchTab('penilaian')" data-tab="penilaian" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition bg-amber-600/30 text-amber-200">
@@ -1171,7 +1171,7 @@
       });
 
       refreshAllViews();
-      switchTab(isAdmin ? 'dashboard' : 'scan');
+      switchTab('dashboard');
     }
 
     function logout() {
