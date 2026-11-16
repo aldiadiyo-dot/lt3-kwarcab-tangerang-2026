@@ -702,18 +702,18 @@
               <input type="hidden" id="peserta-is-edit" value="false" />
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Registrasi (QR Code ID) *</label>
-                <input type="text" id="peserta-nomor" required placeholder="Contoh: REG-001"
+                <input type="text" id="peserta-nomor" required placeholder="Contoh: LT3-001"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 <p class="text-[10px] text-stone-500 mt-1">Nomor Peserta (A-001 / B-001) otomatis dibuat saat scan daftar ulang.</p>
               </div>
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor / Nama Kwarran *</label>
-                <input type="text" id="peserta-kwarran" required placeholder="Contoh: 01 - Balaraja / Kwarran Tigaraksa"
+                <input type="text" id="peserta-kwarran" required placeholder="Contoh: Balaraja"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
               </div>
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Gudep (Ganjil=Putra, Genap=Putri) *</label>
-                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01.001 (Putra) atau 01.002 (Putri)"
+                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01-001"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 <p class="text-[10px] text-stone-500 mt-1">Akhiran angka ganjil otomatis masuk Putra, angka genap masuk Putri.</p>
               </div>
@@ -941,7 +941,7 @@
               <label for="set-tempat-tanggal" class="block text-xs font-bold uppercase text-pramuka-dark">
                 <i class="fa-solid fa-calendar-day text-pramuka-gold mr-1"></i> Tempat & Tanggal Pengesahan Laporan
               </label>
-              <input type="text" id="set-tempat-tanggal" placeholder="Contoh: Tangerang, 25 Oktober 2026"
+              <input type="text" id="set-tempat-tanggal" placeholder="Contoh: Tangerang, 19 November 2026"
                 oninput="document.getElementById('prev-tempat-tanggal').textContent = this.value.trim() || 'Tangerang, Oktober 2026'"
                 class="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold" />
               <p class="text-[11px] text-stone-500">Teks ini akan otomatis ditampilkan pada bagian pengesahan (di atas Koordinator Dewan Juri) saat mencetak Laporan maupun mengunduh PDF.</p>
