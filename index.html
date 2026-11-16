@@ -97,10 +97,24 @@
         background-color: #fef3c7 !important;
         color: #78350f !important;
       }
-      body:not(.printing-report) #card-qrcode-box img,
-      body:not(.printing-report) #card-qrcode-box canvas {
+      body:not(.printing-report) #card-qrcode-box {
+        width: 132px !important;
+        height: 132px !important;
+        margin: 0 auto !important;
+        overflow: hidden !important;
+      }
+      body:not(.printing-report) #card-qrcode-box img {
         margin: 0 auto !important;
         display: block !important;
+        width: 116px !important;
+        height: 116px !important;
+      }
+      body:not(.printing-report) #card-qrcode-box canvas {
+        display: none !important;
+      }
+      body:not(.printing-report) #app-shell,
+      body:not(.printing-report) #login-screen {
+        display: none !important;
       }
 
       /* MODE CETAK LAPORAN (LANDSCAPE) */
@@ -1666,14 +1680,7 @@
       }
 
       document.getElementById('card-nama-regu').textContent = peserta['Nama Regu'];
-      document.getElementById('card-kwarran').textContent = peserta['Nomor Kwarran'];
-      document.getElementById('card-gudep').textContent = peserta['Nomor Gudep'];
-      document.getElementById('card-kategori-badge').textContent = `REGU ${kategori}`;
-      document.getElementById('card-qr-label').textContent = primaryCode;
-      document.getElementById('card-status-badge').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${badgeText}`;
-      document.getElementById('card-timestamp').textContent = timestamp ? `Waktu Daftar Ulang: ${timestamp}` : 'LT III Kwarcab Tangerang Tahun 2026';
-
-      // Render QR Code
+      // Render QR Code (pastikan hanya satu elemen gambar QR yang tampil agar tidak terduplikasi saat print)
       const qrBox = document.getElementById('card-qrcode-box');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
@@ -1684,6 +1691,13 @@
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
+      setTimeout(() => {
+        const qrImg = qrBox.querySelector('img');
+        const qrCanvas = qrBox.querySelector('canvas');
+        if (qrImg && qrCanvas) {
+          qrCanvas.style.display = 'none';
+        }
+      }, 50);
 
       const modal = document.getElementById('modal-id-card');
       modal.classList.remove('hidden');
