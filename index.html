@@ -522,13 +522,13 @@
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nilai Juri 1 *</label>
-                  <input type="number" step="0.01" id="nilai-juri-1" required placeholder="0" oninput="hitungTotalNilai()"
+                  <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nilai Juri 1</label>
+                  <input type="number" step="0.01" id="nilai-juri-1" placeholder="0" oninput="hitungTotalNilai()"
                     class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold text-center focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nilai Juri 2 *</label>
-                  <input type="number" step="0.01" id="nilai-juri-2" required placeholder="0" oninput="hitungTotalNilai()"
+                  <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nilai Juri 2</label>
+                  <input type="number" step="0.01" id="nilai-juri-2" placeholder="0" oninput="hitungTotalNilai()"
                     class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold text-center focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 </div>
               </div>
@@ -702,18 +702,18 @@
               <input type="hidden" id="peserta-is-edit" value="false" />
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Registrasi (QR Code ID) *</label>
-                <input type="text" id="peserta-nomor" required placeholder="Contoh: LT3-001"
+                <input type="text" id="peserta-nomor" required placeholder="Contoh: REG-001"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 <p class="text-[10px] text-stone-500 mt-1">Nomor Peserta (A-001 / B-001) otomatis dibuat saat scan daftar ulang.</p>
               </div>
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Kwarran *</label>
-                <input type="text" id="peserta-kwarran" required placeholder="Contoh: Balaraja"
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor / Nama Kwarran *</label>
+                <input type="text" id="peserta-kwarran" required placeholder="Contoh: 01 - Balaraja / Kwarran Tigaraksa"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Gudep *</label>
-                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01-001 (Putra) atau 01-002 (Putri)"
+                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nomor Gudep (Ganjil=Putra, Genap=Putri) *</label>
+                <input type="text" id="peserta-gudep" required placeholder="Contoh: 01.001 (Putra) atau 01.002 (Putri)"
                   class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
                 <p class="text-[10px] text-stone-500 mt-1">Akhiran angka ganjil otomatis masuk Putra, angka genap masuk Putri.</p>
               </div>
@@ -941,7 +941,7 @@
               <label for="set-tempat-tanggal" class="block text-xs font-bold uppercase text-pramuka-dark">
                 <i class="fa-solid fa-calendar-day text-pramuka-gold mr-1"></i> Tempat & Tanggal Pengesahan Laporan
               </label>
-              <input type="text" id="set-tempat-tanggal" placeholder="Contoh: Tangerang, 19 November 2026"
+              <input type="text" id="set-tempat-tanggal" placeholder="Contoh: Tangerang, 25 Oktober 2026"
                 oninput="document.getElementById('prev-tempat-tanggal').textContent = this.value.trim() || 'Tangerang, Oktober 2026'"
                 class="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold" />
               <p class="text-[11px] text-stone-500">Teks ini akan otomatis ditampilkan pada bagian pengesahan (di atas Koordinator Dewan Juri) saat mencetak Laporan maupun mengunduh PDF.</p>
@@ -1802,6 +1802,25 @@
     // =========================================================
     // PENILAIAN (INPUT MANUAL + EDIT BARIS + IMPOR EXCEL)
     // =========================================================
+    // Fungsi helper perhitungan nilai rata-rata juri & pembulatan
+    function calculateRoundedScore(rawJ1, rawJ2) {
+      const s1 = String(rawJ1 ?? '').trim();
+      const s2 = String(rawJ2 ?? '').trim();
+      const hasJ1 = s1 !== '' && !isNaN(parseFloat(s1)) && parseFloat(s1) > 0;
+      const hasJ2 = s2 !== '' && !isNaN(parseFloat(s2)) && parseFloat(s2) > 0;
+      const v1 = parseFloat(s1) || 0;
+      const v2 = parseFloat(s2) || 0;
+
+      if (hasJ1 && hasJ2) {
+        return Math.round((v1 + v2) / 2);
+      } else if (hasJ1) {
+        return Math.round(v1);
+      } else if (hasJ2) {
+        return Math.round(v2);
+      }
+      return 0;
+    }
+
     function autoFillPesertaNilai() {
       const no = document.getElementById('nilai-no-peserta').value.trim();
       const found = findPesertaByAnyNumber(no);
@@ -1818,10 +1837,10 @@
     }
 
     function hitungTotalNilai() {
-      const j1 = parseFloat(document.getElementById('nilai-juri-1').value) || 0;
-      const j2 = parseFloat(document.getElementById('nilai-juri-2').value) || 0;
-      const total = j1 + j2;
-      document.getElementById('nilai-total-display').textContent = Number.isInteger(total) ? total : total.toFixed(2);
+      const rawJ1 = document.getElementById('nilai-juri-1').value;
+      const rawJ2 = document.getElementById('nilai-juri-2').value;
+      const total = calculateRoundedScore(rawJ1, rawJ2);
+      document.getElementById('nilai-total-display').textContent = total;
     }
 
     function editPenilaian(rowIndex) {
@@ -1877,8 +1896,16 @@
       const namaRegu = foundP ? foundP['Nama Regu'] : (document.getElementById('nilai-nama-regu').value.trim() || 'Peserta Umum');
       const kwarran = foundP ? foundP['Nomor Kwarran'] : (document.getElementById('nilai-kwarran').value.trim() || '-');
       const namaLomba = document.getElementById('nilai-nama-lomba').value.trim();
-      const j1 = parseFloat(document.getElementById('nilai-juri-1').value) || 0;
-      const j2 = parseFloat(document.getElementById('nilai-juri-2').value) || 0;
+      const rawJ1 = document.getElementById('nilai-juri-1').value;
+      const rawJ2 = document.getElementById('nilai-juri-2').value;
+      const j1 = parseFloat(rawJ1) || 0;
+      const j2 = parseFloat(rawJ2) || 0;
+      const totalNilai = calculateRoundedScore(rawJ1, rawJ2);
+
+      if (String(rawJ1).trim() === '' && String(rawJ2).trim() === '') {
+        showToast("Harap isi minimal salah satu nilai juri!", "warning");
+        return;
+      }
 
       showLoader(editRowIndex ? "Memperbarui data penilaian..." : "Menyimpan nilai ke Google Sheets...");
       try {
@@ -1896,6 +1923,7 @@
             namaLomba: namaLomba,
             nilaiJuri1: j1,
             nilaiJuri2: j2,
+            totalNilai: totalNilai,
             penginput: CURRENT_USER.nama
           }
         });
@@ -1946,19 +1974,22 @@
         jsonRows.forEach(row => {
           const no = row['Nomor Peserta'] || row['nomor_peserta'] || row['No Peserta'] || '';
           const lomba = row['Nama Lomba'] || row['nama_lomba'] || row['Lomba'] || '';
-          const j1 = parseFloat(row['Nilai Juri 1'] || row['Juri 1'] || 0) || 0;
-          const j2 = parseFloat(row['Nilai Juri 2'] || row['Juri 2'] || 0) || 0;
+          const rawJ1 = row['Nilai Juri 1'] ?? row['Juri 1'] ?? '';
+          const rawJ2 = row['Nilai Juri 2'] ?? row['Juri 2'] ?? '';
+          const j1 = parseFloat(rawJ1) || 0;
+          const j2 = parseFloat(rawJ2) || 0;
 
           if (String(no).trim() !== '' && String(lomba).trim() !== '') {
             const foundPeserta = findPesertaByAnyNumber(no);
             const namaRegu = foundPeserta ? foundPeserta['Nama Regu'] : '(Tidak terdaftar)';
-            const total = j1 + j2;
+            const total = calculateRoundedScore(rawJ1, rawJ2);
 
             excelBatchBuffer.push({
               nomorPeserta: String(no).trim(),
               namaLomba: String(lomba).trim(),
               nilaiJuri1: j1,
-              nilaiJuri2: j2
+              nilaiJuri2: j2,
+              totalNilai: total
             });
 
             previewTbody.innerHTML += `
@@ -2399,14 +2430,16 @@
         String(n['Nama Lomba']).toLowerCase().includes(q)
       );
 
-      document.getElementById('tbody-penilaian').innerHTML = filtered.length ? filtered.map(n => `
+      document.getElementById('tbody-penilaian').innerHTML = filtered.length ? filtered.map(n => {
+        const computedTotal = calculateRoundedScore(n['Nilai Juri 1'], n['Nilai Juri 2']);
+        return `
         <tr class="hover:bg-stone-50">
           <td class="p-2.5 font-bold">${n['Nomor Peserta']}</td>
           <td class="p-2.5">${n['Nama Regu']}</td>
           <td class="p-2.5 font-semibold text-pramuka-primary">${n['Nama Lomba']}</td>
-          <td class="p-2.5 text-center">${n['Nilai Juri 1']}</td>
-          <td class="p-2.5 text-center">${n['Nilai Juri 2']}</td>
-          <td class="p-2.5 text-center font-extrabold text-emerald-700">${n['Total Nilai']}</td>
+          <td class="p-2.5 text-center">${n['Nilai Juri 1'] || '-'}</td>
+          <td class="p-2.5 text-center">${n['Nilai Juri 2'] || '-'}</td>
+          <td class="p-2.5 text-center font-extrabold text-emerald-700">${computedTotal}</td>
           <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
             <button onclick="editPenilaian(${n._rowIndex})" class="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded" title="Edit Nilai">
               <i class="fa-solid fa-pen"></i>
@@ -2416,7 +2449,8 @@
             </button>
           </td>
         </tr>
-      `).join('') : `<tr><td colspan="7" class="p-6 text-center text-stone-400">Belum ada data penilaian</td></tr>`;
+      `;
+      }).join('') : `<tr><td colspan="7" class="p-6 text-center text-stone-400">Belum ada data penilaian</td></tr>`;
     }
 
     function renderPesertaTable() {
@@ -2522,7 +2556,7 @@
             };
           }
           map[key].jumlahLomba += 1;
-          map[key].akumulasiNilai += parseFloat(n['Total Nilai']) || 0;
+          map[key].akumulasiNilai += calculateRoundedScore(n['Nilai Juri 1'], n['Nilai Juri 2']);
         });
 
         const sorted = Object.values(map).sort((a, b) => b.akumulasiNilai - a.akumulasiNilai);
@@ -2560,7 +2594,7 @@
             };
           }
           const lombaName = String(n['Nama Lomba'] || '').trim();
-          const val = parseFloat(n['Total Nilai']) || 0;
+          const val = calculateRoundedScore(n['Nilai Juri 1'], n['Nilai Juri 2']);
           map[key].scoresByLomba[lombaName] = (map[key].scoresByLomba[lombaName] || 0) + val;
           map[key].totalKelompok += val;
         });
@@ -2587,7 +2621,7 @@
         ? filteredByGender
         : filteredByGender.filter(n => n['Nama Lomba'] === mode);
 
-      const sortedList = [...list].sort((a, b) => (parseFloat(b['Total Nilai']) || 0) - (parseFloat(a['Total Nilai']) || 0));
+      const sortedList = [...list].sort((a, b) => calculateRoundedScore(b['Nilai Juri 1'], b['Nilai Juri 2']) - calculateRoundedScore(a['Nilai Juri 1'], a['Nilai Juri 2']));
 
       return {
         subtitle: mode === 'ALL'
@@ -2597,15 +2631,16 @@
         rows: sortedList.map((n, idx) => {
           const pInfo = findPesertaByAnyNumber(n['Nomor Peserta']);
           const displayNo = pInfo ? (getDisplayNoPesertaForReg(pInfo['Nomor Peserta']) || n['Nomor Peserta']) : n['Nomor Peserta'];
+          const computedTotal = calculateRoundedScore(n['Nilai Juri 1'], n['Nilai Juri 2']);
           return [
             idx + 1,
             displayNo,
             n['Nama Regu'],
             n['Nomor Kwarran'],
             n['Nama Lomba'],
-            n['Nilai Juri 1'],
-            n['Nilai Juri 2'],
-            n['Total Nilai']
+            n['Nilai Juri 1'] || '-',
+            n['Nilai Juri 2'] || '-',
+            computedTotal
           ];
         })
       };
