@@ -52,25 +52,27 @@
       body * {
         visibility: hidden;
       }
-      #modal-id-card {
+      /* MODE CETAK KARTU ID */
+      body:not(.printing-report) #modal-id-card {
         position: static !important;
         background: transparent !important;
         padding: 0 !important;
         display: block !important;
       }
-      #id-card-wrapper {
+      body:not(.printing-report) #id-card-wrapper {
         box-shadow: none !important;
         border: none !important;
         margin: 0 auto !important;
         width: 340px !important;
         max-width: 340px !important;
       }
-      #print-area, #print-area * {
+      body:not(.printing-report) #print-area,
+      body:not(.printing-report) #print-area * {
         visibility: visible !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
-      #print-area {
+      body:not(.printing-report) #print-area {
         position: relative !important;
         width: 340px !important;
         margin: 0 auto !important;
@@ -80,24 +82,57 @@
         background: linear-gradient(to bottom, #3E2723, #5D4037, #292524) !important;
         color: #ffffff !important;
       }
-      #print-area .bg-white {
+      body:not(.printing-report) #print-area .bg-white {
         background-color: #ffffff !important;
         color: #1c1917 !important;
       }
-      #print-area .bg-stone-100 {
+      body:not(.printing-report) #print-area .bg-stone-100 {
         background-color: #f5f5f4 !important;
       }
-      #print-area .bg-emerald-500 {
+      body:not(.printing-report) #print-area .bg-emerald-500 {
         background-color: #10b981 !important;
         color: #ffffff !important;
       }
-      #print-area .bg-amber-100 {
+      body:not(.printing-report) #print-area .bg-amber-100 {
         background-color: #fef3c7 !important;
         color: #78350f !important;
       }
-      #card-qrcode-box img, #card-qrcode-box canvas {
+      body:not(.printing-report) #card-qrcode-box img,
+      body:not(.printing-report) #card-qrcode-box canvas {
         margin: 0 auto !important;
         display: block !important;
+      }
+
+      /* MODE CETAK LAPORAN (LANDSCAPE) */
+      body.printing-report #report-print-area,
+      body.printing-report #report-print-area * {
+        visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body.printing-report #report-print-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        border: none !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      body.printing-report #report-print-area table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 10px !important;
+      }
+      body.printing-report #report-print-area th,
+      body.printing-report #report-print-area td {
+        border: 1px solid #44403c !important;
+        padding: 5px 6px !important;
+      }
+      body.printing-report #report-print-area thead {
+        background-color: #3E2723 !important;
+        color: #ffffff !important;
       }
     }
     .loader-spin {
@@ -820,20 +855,20 @@
                 <option value="Kelompok 2 (Pengetahuan dan Bela Negara)">Kelompok 2 (Pengetahuan dan Bela Negara)</option>
                 <option value="Kelompok 3 (Keterampilan Kepramukaan)">Kelompok 3 (Keterampilan Kepramukaan)</option>
                 <option value="Kelompok 4 (Manajemen Regu)">Kelompok 4 (Manajemen Regu)</option>
-                <option value="Kelompok 5 (Keterampilan dan Teknologi)">Kelompok 5 (Keterampilan dan Teknologi)</option>
-                <option value="Kelompok 6 (Mental, Seni dan Budaya)">Kelompok 6 (Mental, Seni dan Budaya)</option>
-              </select>
+              <button onclick="printLaporanLandscape()" class="px-4 py-2 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-xs shadow flex items-center gap-2">
+                <i class="fa-solid fa-print text-amber-400"></i> Print Laporan
+              </button>
 
               <button onclick="exportLaporanPDF()" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-xs shadow flex items-center gap-2">
-                <i class="fa-solid fa-file-pdf"></i> Cetak / Download PDF
+                <i class="fa-solid fa-file-pdf"></i> Download PDF
               </button>
             </div>
           </div>
 
           <!-- PREVIEW KOP & TABEL LAPORAN -->
-          <div class="border border-stone-200 rounded-xl p-6 bg-stone-50/50 space-y-5">
+          <div id="report-print-area" class="border border-stone-200 rounded-xl p-6 bg-stone-50/50 space-y-5">
             <div class="flex items-center justify-center gap-4 border-b-2 border-stone-800 pb-4 text-center">
-              <img id="laporan-preview-logo" src="" alt="Logo" class="w-16 h-16 object-contain hidden" />
+              <img id="laporan-preview-logo" src="" alt="Logo Kegiatan" class="w-16 h-16 object-contain hidden shrink-0" />
               <div>
                 <h3 class="font-extrabold text-sm md:text-base uppercase text-stone-900">
                   GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG
@@ -1254,7 +1289,26 @@
           APP_DATA.peserta = res.peserta || [];
           APP_DATA.daftarUlang = res.daftarUlang || [];
           APP_DATA.penilaian = res.penilaian || [];
-          APP_DATA.settings = res.settings || {};
+          
+          // Gabungkan pengaturan dari server dengan cache lokal agar logo & tanda tangan tidak hilang
+          let cachedSettings = {};
+          try {
+            const rawCache = localStorage.getItem('lt3_settings_cache');
+            if (rawCache) cachedSettings = JSON.parse(rawCache);
+          } catch (e) {}
+
+          const serverSettings = res.settings || {};
+          APP_DATA.settings = {
+            ...cachedSettings,
+            ...serverSettings,
+            logo: serverSettings.logo || cachedSettings.logo || '',
+            tempatTanggal: serverSettings.tempatTanggal || cachedSettings.tempatTanggal || 'Tangerang, Oktober 2026',
+            jabatanKetua: serverSettings.jabatanKetua || cachedSettings.jabatanKetua || 'Ketua Panitia Pelaksana',
+            namaKetua: serverSettings.namaKetua || cachedSettings.namaKetua || '',
+            jabatanJuri: serverSettings.jabatanJuri || cachedSettings.jabatanJuri || 'Koordinator Dewan Juri',
+            namaJuri: serverSettings.namaJuri || cachedSettings.namaJuri || ''
+          };
+          localStorage.setItem('lt3_settings_cache', JSON.stringify(APP_DATA.settings));
 
           rebuildRegistrationMappings();
 
@@ -1689,11 +1743,13 @@
     async function persistLombaListToServer() {
       localStorage.setItem('lt3_mata_lomba_v2', JSON.stringify(APP_DATA.lombaList));
       APP_DATA.settings.daftarMataLomba = JSON.stringify(APP_DATA.lombaList);
+      localStorage.setItem('lt3_settings_cache', JSON.stringify(APP_DATA.settings));
       showLoader("Menyimpan daftar mata lomba...");
       try {
         await apiCall({
           action: 'saveSettings',
           settings: {
+            ...APP_DATA.settings,
             daftarMataLomba: JSON.stringify(APP_DATA.lombaList)
           }
         });
@@ -2097,7 +2153,7 @@
         const img = new Image();
         img.onload = function () {
           const canvas = document.createElement('canvas');
-          const maxDim = 220;
+          const maxDim = 200;
           let w = img.width, h = img.height;
           if (w > h) {
             if (w > maxDim) { h *= maxDim / w; w = maxDim; }
@@ -2108,11 +2164,13 @@
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          tempLogoBase64 = canvas.toDataURL('image/png', 0.85);
+          tempLogoBase64 = canvas.toDataURL('image/png', 0.8);
 
-          document.getElementById('setting-logo-preview').src = tempLogoBase64;
-          document.getElementById('setting-logo-preview').classList.remove('hidden');
-          document.getElementById('setting-logo-placeholder').classList.add('hidden');
+          // Langsung terapkan ke state & seluruh UI (termasuk halaman Laporan)
+          APP_DATA.settings.logo = tempLogoBase64;
+          localStorage.setItem('lt3_settings_cache', JSON.stringify(APP_DATA.settings));
+          applySettingsToUI();
+          showToast("Logo berhasil dimuat! Klik 'Simpan Pengaturan' untuk menyimpan permanen.", "success");
         };
         img.src = e.target.result;
       };
@@ -2122,6 +2180,7 @@
     document.getElementById('form-pengaturan').addEventListener('submit', async (e) => {
       e.preventDefault();
       const settingsPayload = {
+        ...APP_DATA.settings,
         logo: tempLogoBase64 || APP_DATA.settings.logo || '',
         tempatTanggal: document.getElementById('set-tempat-tanggal').value.trim(),
         jabatanKetua: document.getElementById('set-jabatan-ketua').value.trim(),
@@ -2131,14 +2190,21 @@
         daftarMataLomba: JSON.stringify(APP_DATA.lombaList)
       };
 
+      // Simpan langsung ke state lokal & cache browser agar langsung tampil tanpa ter-reset
+      APP_DATA.settings = settingsPayload;
+      localStorage.setItem('lt3_settings_cache', JSON.stringify(settingsPayload));
+      applySettingsToUI();
+
       showLoader("Menyimpan pengaturan ke Google Sheets...");
       try {
         const res = await apiCall({ action: 'saveSettings', settings: settingsPayload });
         if (res.status === 'success') {
-          APP_DATA.settings = settingsPayload;
-          applySettingsToUI();
-          showToast(res.message);
+          showToast(res.message || "Pengaturan Logo & Tanda Tangan berhasil disimpan!");
+        } else {
+          showToast(res.message || "Tersimpan di browser, periksa koneksi server.", "warning");
         }
+      } catch (err) {
+        showToast("Pengaturan diterapkan di browser (gagal sinkron ke server).", "warning");
       } finally {
         hideLoader();
       }
@@ -2155,8 +2221,11 @@
           if (logo) {
             el.src = logo;
             el.classList.remove('hidden');
+            el.style.display = 'block';
           } else {
+            el.removeAttribute('src');
             el.classList.add('hidden');
+            el.style.display = '';
           }
         }
       });
@@ -2165,6 +2234,10 @@
         document.getElementById('login-logo-icon')?.classList.add('hidden');
         document.getElementById('header-logo-icon')?.classList.add('hidden');
         document.getElementById('setting-logo-placeholder')?.classList.add('hidden');
+      } else {
+        document.getElementById('login-logo-icon')?.classList.remove('hidden');
+        document.getElementById('header-logo-icon')?.classList.remove('hidden');
+        document.getElementById('setting-logo-placeholder')?.classList.remove('hidden');
       }
 
       document.getElementById('set-tempat-tanggal').value = s.tempatTanggal || 'Tangerang, Oktober 2026';
@@ -2537,9 +2610,30 @@
         : `<tr><td colspan="${dataset.headers.length}" class="p-6 text-center text-stone-400">Belum ada data penilaian pada kategori ini</td></tr>`;
     }
 
+    function printLaporanLandscape() {
+      // Tambahkan aturan @page landscape dinamis khusus saat print laporan
+      const styleEl = document.createElement('style');
+      styleEl.id = 'dynamic-landscape-print-style';
+      styleEl.textContent = `@media print { @page { size: A4 landscape; margin: 10mm; } }`;
+      document.head.appendChild(styleEl);
+      document.body.classList.add('printing-report');
+
+      const cleanupPrint = () => {
+        document.body.classList.remove('printing-report');
+        const existingStyle = document.getElementById('dynamic-landscape-print-style');
+        if (existingStyle) existingStyle.remove();
+        window.removeEventListener('afterprint', cleanupPrint);
+      };
+
+      window.addEventListener('afterprint', cleanupPrint);
+      window.print();
+      // Fallback cleanup jika afterprint tidak terpicu pada beberapa browser
+      setTimeout(cleanupPrint, 1500);
+    }
+
     function exportLaporanPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
+      const doc = new jsPDF('l', 'mm', 'a4');
       const s = APP_DATA.settings || {};
       const dataset = getLaporanDataset();
       const genderFilter = document.getElementById('filter-laporan-gender').value;
@@ -2547,21 +2641,21 @@
       // Logo di Kop Surat (jika tersedia)
       if (s.logo && s.logo.startsWith('data:image')) {
         try {
-          doc.addImage(s.logo, 'PNG', 15, 10, 20, 20);
+          doc.addImage(s.logo, 'PNG', 18, 10, 20, 20);
         } catch (e) {}
       }
 
-      // Kop Surat Resmi
+      // Kop Surat Resmi (posisi tengah halaman A4 Landscape 297mm -> X = 148.5)
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG", 112, 16, { align: "center" });
+      doc.setFontSize(13);
+      doc.text("GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG", 148.5, 16, { align: "center" });
       doc.setFontSize(11);
-      doc.text("LOMBA TINGKAT REGU PENGGALANG TIGA (LT III) TAHUN 2026", 112, 22, { align: "center" });
+      doc.text("LOMBA TINGKAT REGU PENGGALANG TIGA (LT III) TAHUN 2026", 148.5, 22, { align: "center" });
       doc.setFontSize(9.5);
-      doc.text(dataset.subtitle, 112, 28, { align: "center" });
+      doc.text(dataset.subtitle, 148.5, 28, { align: "center" });
 
       doc.setLineWidth(0.7);
-      doc.line(14, 33, 196, 33);
+      doc.line(14, 33, 283, 33);
 
       // Tabel Penilaian
       doc.autoTable({
@@ -2574,24 +2668,24 @@
         alternateRowStyles: { fillColor: [248, 246, 245] }
       });
 
-      // Kolom Tanda Tangan Ketua Panitia & Dewan Juri
-      let finalY = doc.lastAutoTable.finalY + 15;
-      if (finalY > 245) {
+      // Kolom Tanda Tangan Ketua Panitia & Dewan Juri (menyesuaikan lebar A4 Landscape)
+      let finalY = doc.lastAutoTable.finalY + 12;
+      if (finalY > 165) {
         doc.addPage();
-        finalY = 25;
+        finalY = 20;
       }
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("Mengetahui,", 48, finalY, { align: "center" });
-      doc.text(s.tempatTanggal || "Tangerang, Oktober 2026", 155, finalY, { align: "center" });
+      doc.text("Mengetahui,", 72, finalY, { align: "center" });
+      doc.text(s.tempatTanggal || "Tangerang, Oktober 2026", 225, finalY, { align: "center" });
 
       doc.setFont("helvetica", "bold");
-      doc.text(s.jabatanKetua || "Ketua Panitia Pelaksana", 48, finalY + 5, { align: "center" });
-      doc.text(s.jabatanJuri || "Koordinator Dewan Juri", 155, finalY + 5, { align: "center" });
+      doc.text(s.jabatanKetua || "Ketua Panitia Pelaksana", 72, finalY + 5, { align: "center" });
+      doc.text(s.jabatanJuri || "Koordinator Dewan Juri", 225, finalY + 5, { align: "center" });
 
-      doc.text(s.namaKetua || "( .................................... )", 48, finalY + 26, { align: "center" });
-      doc.text(s.namaJuri || "( .................................... )", 155, finalY + 26, { align: "center" });
+      doc.text(s.namaKetua || "( .................................... )", 72, finalY + 24, { align: "center" });
+      doc.text(s.namaJuri || "( .................................... )", 225, finalY + 24, { align: "center" });
 
       doc.save(`Laporan_LT3_${genderFilter}_Kwarcab_Tangerang_2026.pdf`);
     }
