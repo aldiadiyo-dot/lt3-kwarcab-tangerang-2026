@@ -205,7 +205,7 @@
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="login-nama" required placeholder="Nama Panitia atau No. Peserta (A-001)..."
+            <input type="text" id="login-nama" required placeholder="Masukkan Username atau No. Peserta (A-001)..."
               class="w-full pl-10 pr-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold outline-none text-sm" />
           </div>
         </div>
@@ -216,15 +216,15 @@
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
               <i class="fa-solid fa-lock"></i>
             </span>
-            <input type="password" id="login-password" required placeholder="Password / No. Gudep atau No. Peserta..."
+            <input type="password" id="login-password" required placeholder="Masukkan password..."
               class="w-full pl-10 pr-10 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold outline-none text-sm" />
             <button type="button" onclick="togglePassVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600">
               <i id="eye-icon" class="fa-solid fa-eye"></i>
             </button>
           </div>
           <p class="text-[11px] text-stone-500 mt-1.5">
-            <i class="fa-solid fa-circle-info text-pramuka-gold mr-1"></i>
-            <b>Peserta:</b> Gunakan <b>Nomor Peserta</b> (mis. <code>A-001</code> / <code>B-001</code>) sebagai Username, dan <b>Nomor Gudep</b> atau <b>Nomor Peserta</b> sebagai Password.
+            <i class="fa-solid fa-shield-halved text-pramuka-gold mr-1"></i>
+            Gunakan akun <b>Admin</b>, <b>Juri</b>, atau <b>Nomor Peserta</b> yang diberikan panitia.
           </p>
         </div>
 
@@ -279,7 +279,7 @@
       <!-- NAVIGATION BAR -->
       <nav class="bg-pramuka-primary/90 border-t border-stone-700 overflow-x-auto">
         <div class="max-w-7xl mx-auto px-4 flex space-x-1 py-1.5 text-xs font-bold whitespace-nowrap">
-          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn staff-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-chart-pie"></i> Dashboard
           </button>
           <button onclick="switchTab('scan')" data-tab="scan" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
@@ -311,7 +311,7 @@
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
 
       <!-- ===================================================== -->
-      <!-- TAB 1: DASHBOARD (ADMIN / USER)                       -->
+      <!-- TAB 1: DASHBOARD (KHUSUS ADMIN)                       -->
       <!-- ===================================================== -->
       <div id="tab-dashboard" class="tab-content space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -487,7 +487,7 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 3: HALAMAN PENILAIAN (STAFF & VIEW PESERTA)       -->
+      <!-- TAB 3: HALAMAN PENILAIAN (ADMIN, JURI, PESERTA)       -->
       <!-- ===================================================== -->
       <div id="tab-penilaian" class="tab-content hidden space-y-6">
 
@@ -511,7 +511,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- FORM INPUT / EDIT PENILAIAN MANUAL (HANYA PANITIA/ADMIN) -->
+          <!-- FORM INPUT / EDIT PENILAIAN MANUAL (ADMIN & JURI) -->
           <div id="penilaian-input-col" class="lg:col-span-5 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-primary space-y-4">
             <div class="flex items-center justify-between border-b pb-2.5">
               <h2 id="form-penilaian-title" class="font-extrabold text-pramuka-dark text-base flex items-center gap-2">
@@ -585,7 +585,7 @@
 
           <!-- IMPOR DARI EXCEL & DAFTAR NILAI -->
           <div id="penilaian-table-col" class="lg:col-span-7 space-y-6">
-            <!-- BOX IMPOR EXCEL (HANYA PANITIA/ADMIN) -->
+            <!-- BOX IMPOR EXCEL (ADMIN & JURI) -->
             <div id="penilaian-excel-box" class="bg-white p-6 rounded-2xl shadow border-t-4 border-emerald-600 space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -629,7 +629,7 @@
             <div class="bg-white p-6 rounded-2xl shadow space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 id="tabel-penilaian-heading" class="font-bold text-pramuka-dark text-sm">Data Penilaian Tersimpan</h3>
-                <input type="text" id="search-nilai" onkeyup="renderPenilaianTable()" placeholder="Filter mata lomba..."
+                <input type="text" id="search-nilai" onkeyup="renderPenilaianTable()" placeholder="Filter regu / lomba..."
                   class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
               </div>
               <div class="overflow-x-auto max-h-96">
@@ -804,7 +804,7 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 5: DATA USER (ADMIN & JURI/PANITIA)               -->
+      <!-- TAB 5: DATA USER (ADMIN, JURI & PESERTA)              -->
       <!-- ===================================================== -->
       <div id="tab-users" class="tab-content hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -815,23 +815,44 @@
             <form id="form-user" class="space-y-3.5">
               <input type="hidden" id="user-is-edit" value="false" />
               <input type="hidden" id="user-nomor" value="" />
-              <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Nama Pengguna (Login) *</label>
-                <input type="text" id="user-nama" required placeholder="Contoh: Juri Pionering / Panitia 1"
-                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Password *</label>
-                <input type="text" id="user-password" required placeholder="Masukkan password..."
-                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:ring-2 focus:ring-pramuka-gold outline-none" />
-              </div>
+
               <div>
                 <label class="block text-xs font-bold text-stone-600 uppercase mb-1">Role / Hak Akses *</label>
-                <select id="user-role" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-pramuka-gold outline-none">
-                  <option value="User">User (Juri / Petugas Scan)</option>
-                  <option value="Admin">Admin (Akses Penuh)</option>
+                <select id="user-role" onchange="onUserRoleChange()" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-pramuka-gold outline-none">
+                  <option value="Admin">Admin (Akses Semua Menu)</option>
+                  <option value="Juri">Juri (Hanya Akses Penilaian)</option>
+                  <option value="Peserta">Peserta (Hanya Akses Nilai Regunya)</option>
                 </select>
+                <p id="user-role-hint" class="text-[10px] text-stone-500 mt-1">Admin memiliki akses penuh ke seluruh fitur sistem.</p>
               </div>
+
+              <div>
+                <label id="user-nama-label" class="block text-xs font-bold text-stone-600 uppercase mb-1">Username / Nama Pengguna *</label>
+                <input type="text" id="user-nama" list="list-user-peserta-options" required placeholder="Contoh: Admin1 / JuriPionering..."
+                  class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                <datalist id="list-user-peserta-options"></datalist>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-bold text-stone-600 uppercase">Password (6 Karakter) *</label>
+                  <button type="button" onclick="fillGeneratedPassword()" class="text-[11px] font-bold text-pramuka-gold hover:text-amber-700 flex items-center gap-1">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Otomatis
+                  </button>
+                </div>
+                <div class="flex gap-2">
+                  <input type="text" id="user-password" required maxlength="16" placeholder="Klik Generate atau ketik..."
+                    class="flex-1 px-3.5 py-2 border border-stone-300 rounded-xl text-sm font-mono font-bold tracking-wider focus:ring-2 focus:ring-pramuka-gold outline-none" />
+                  <button type="button" onclick="fillGeneratedPassword()" title="Generate Password 6 Karakter Acak"
+                    class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-xl text-xs border border-amber-300 shrink-0">
+                    <i class="fa-solid fa-dice"></i> Acak
+                  </button>
+                </div>
+                <p class="text-[10px] text-stone-500 mt-1">
+                  Otomatis 6 karakter berisi huruf besar, huruf kecil, angka, dan karakter unik (<code>! @ # * ? &</code>).
+                </p>
+              </div>
+
               <div class="flex gap-2 pt-2">
                 <button type="submit" class="flex-1 py-2.5 bg-pramuka-dark hover:bg-pramuka-primary text-white font-bold rounded-xl text-sm shadow">
                   Simpan User
@@ -844,13 +865,20 @@
           </div>
 
           <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow space-y-4">
-            <h2 class="font-extrabold text-pramuka-dark text-base border-b pb-3">Daftar Akun Pengguna (Sheet: DATA USER)</h2>
-            <div class="overflow-x-auto">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+              <div>
+                <h2 class="font-extrabold text-pramuka-dark text-base">Daftar Akun Pengguna (Sheet: DATA USER)</h2>
+                <p class="text-xs text-stone-500">Klik ikon salin untuk menyalin Username & Password akun untuk dibagikan.</p>
+              </div>
+              <input type="text" id="search-users" onkeyup="renderUsersTable()" placeholder="Cari username / role..."
+                class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
+            </div>
+            <div class="overflow-x-auto max-h-[480px]">
               <table class="w-full text-left text-xs">
-                <thead class="bg-pramuka-dark text-white uppercase">
+                <thead class="bg-pramuka-dark text-white uppercase sticky top-0">
                   <tr>
                     <th class="p-3">No</th>
-                    <th class="p-3">Nama</th>
+                    <th class="p-3">Username / No. Peserta</th>
                     <th class="p-3">Password</th>
                     <th class="p-3">Role</th>
                     <th class="p-3 text-center">Aksi</th>
@@ -1131,6 +1159,82 @@
     let excelBatchBuffer = [];
 
     // =========================================================
+    // GENERATOR PASSWORD OTOMATIS 6 KARAKTER (HURUF BESAR, KECIL, ANGKA, SIMBOL)
+    // =========================================================
+    function generateStrongPassword6() {
+      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+      const lower = "abcdefghijkmnopqrstuvwxyz";
+      const numbers = "23456789";
+      const symbols = "!@#*&?";
+      const allChars = upper + lower + numbers + symbols;
+
+      const pick = (str) => str[Math.floor(Math.random() * str.length)];
+
+      // Jamin minimal 1 huruf besar, 1 huruf kecil, 1 angka, 1 karakter unik
+      const chars = [
+        pick(upper),
+        pick(lower),
+        pick(numbers),
+        pick(symbols),
+        pick(allChars),
+        pick(allChars)
+      ];
+
+      // Acak urutan array (Fisher-Yates Shuffle)
+      for (let i = chars.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [chars[i], chars[j]] = [chars[j], chars[i]];
+      }
+
+      return chars.join('');
+    }
+
+    function fillGeneratedPassword() {
+      const passInput = document.getElementById('user-password');
+      if (passInput) {
+        passInput.value = generateStrongPassword6();
+      }
+    }
+
+    function onUserRoleChange() {
+      const role = document.getElementById('user-role').value;
+      const labelEl = document.getElementById('user-nama-label');
+      const inputEl = document.getElementById('user-nama');
+      const hintEl = document.getElementById('user-role-hint');
+
+      if (role === 'Peserta') {
+        labelEl.textContent = 'Username (Nomor Peserta) *';
+        inputEl.placeholder = 'Ketik / pilih Nomor Peserta (mis. A-001)...';
+        hintEl.textContent = 'Peserta hanya dapat membuka menu Nilai Regunya sendiri.';
+      } else if (role === 'Juri') {
+        labelEl.textContent = 'Username Juri *';
+        inputEl.placeholder = 'Contoh: JuriPionering / Juri1...';
+        hintEl.textContent = 'Juri hanya dapat mengakses halaman Penilaian (Input, Edit & Impor Excel).';
+      } else {
+        labelEl.textContent = 'Username Admin *';
+        inputEl.placeholder = 'Contoh: Admin1 / PanitiaUtama...';
+        hintEl.textContent = 'Admin memiliki akses penuh ke seluruh fitur dan laporan.';
+      }
+
+      if (!document.getElementById('user-password').value.trim()) {
+        fillGeneratedPassword();
+      }
+    }
+
+    function copyAccountCredentials(username, password) {
+      const text = `Username: ${username}\nPassword: ${password}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`Akun "${username}" berhasil disalin ke clipboard!`);
+        }).catch(() => {
+          showToast(`Username: ${username} | Password: ${password}`);
+        });
+      } else {
+        showToast(`Username: ${username} | Password: ${password}`);
+      }
+    }
+
+    // =========================================================
     // HELPER: KATEGORI PUTRA (GUDEP GANJIL) / PUTRI (GUDEP GENAP)
     // =========================================================
     function getKategoriGudep(nomorGudep) {
@@ -1142,7 +1246,6 @@
       return (lastDigit % 2 === 1) ? 'PUTRA' : 'PUTRI';
     }
 
-    // Membangun peta Nomor Registrasi <-> Nomor Peserta (A-001 / B-001) berdasarkan urutan daftar ulang
     function rebuildRegistrationMappings() {
       const map = {};
       let countPutra = 0;
@@ -1152,7 +1255,6 @@
         const rawNo = String(d['Nomor Peserta'] || '').trim();
         const kat = getKategoriGudep(d['Nomor Gudep']);
 
-        // Cek apakah sudah memiliki format A-001 / B-001 atau masih Nomor Registrasi
         const matchAssigned = rawNo.match(/^([AB]-\d{3,})(?:\s*\((.+)\))?$/i);
         let assignedNo = '';
         let regNo = '';
@@ -1174,7 +1276,6 @@
           }
         }
 
-        // Cocokkan dengan master peserta berdasarkan Nama Regu + Gudep jika regNo kosong
         if (!regNo) {
           const pMatch = APP_DATA.peserta.find(p =>
             String(p['Nama Regu']).trim().toLowerCase() === String(d['Nama Regu']).trim().toLowerCase() &&
@@ -1195,7 +1296,6 @@
       APP_DATA.regToPesertaMap = map;
     }
 
-    // Generate Nomor Peserta berikutnya (A-001 untuk Putra, B-001 untuk Putri)
     function generateNextNomorPeserta(kategori) {
       const prefix = kategori === 'PUTRA' ? 'A' : 'B';
       let maxNum = 0;
@@ -1215,11 +1315,9 @@
       const key = String(inputNo || '').trim().toLowerCase();
       if (!key) return null;
 
-      // 1. Cek langsung ke Nomor Registrasi di master peserta
       let found = APP_DATA.peserta.find(p => String(p['Nomor Peserta']).trim().toLowerCase() === key);
       if (found) return found;
 
-      // 2. Cek apakah input adalah Nomor Peserta hasil generate (mis. A-001 / B-001)
       const duRecord = APP_DATA.daftarUlang.find(d =>
         String(d._assignedNoPeserta || '').toLowerCase() === key ||
         String(d['Nomor Peserta'] || '').toLowerCase() === key
@@ -1250,7 +1348,6 @@
       return getKategoriGudep(found['Nomor Gudep']);
     }
 
-    // Normalisasi struktur daftar mata lomba agar mendukung format lama (string) maupun baru ({kelompok, nama})
     function normalizeLombaList(rawList) {
       if (!Array.isArray(rawList)) return [];
       return rawList.map(item => {
@@ -1268,6 +1365,7 @@
     // INISIALISASI SAAT HALAMAN DIMUAT
     // =========================================================
     window.addEventListener('DOMContentLoaded', async () => {
+      fillGeneratedPassword();
       const savedUser = sessionStorage.getItem('lt3_user');
       await syncAllData(false);
 
@@ -1336,7 +1434,6 @@
           APP_DATA.daftarUlang = res.daftarUlang || [];
           APP_DATA.penilaian = res.penilaian || [];
           
-          // Gabungkan pengaturan dari server dengan cache lokal agar logo & tanda tangan tidak hilang
           let cachedSettings = {};
           try {
             const rawCache = localStorage.getItem('lt3_settings_cache');
@@ -1358,7 +1455,6 @@
 
           rebuildRegistrationMappings();
 
-          // Muat daftar mata lomba dari pengaturan server / localStorage / default
           let savedLomba = [];
           if (APP_DATA.settings.daftarMataLomba) {
             try {
@@ -1369,7 +1465,6 @@
             const localCache = localStorage.getItem('lt3_mata_lomba_v2');
             savedLomba = localCache ? normalizeLombaList(JSON.parse(localCache)) : [...DEFAULT_LOMBA_LIST];
           }
-          // Gabungkan juga mata lomba yang sudah ada di data penilaian agar tidak hilang
           APP_DATA.penilaian.forEach(n => {
             const nama = String(n['Nama Lomba'] || '').trim();
             if (nama && !savedLomba.some(l => l.nama.toLowerCase() === nama.toLowerCase())) {
@@ -1392,7 +1487,7 @@
     }
 
     // =========================================================
-    // SISTEM LOGIN & LOGOUT (MENDUKUNG ROLE PESERTA)
+    // SISTEM LOGIN & LOGOUT (ADMIN, JURI, PESERTA)
     // =========================================================
     function togglePassVisibility() {
       const inp = document.getElementById('login-password');
@@ -1406,54 +1501,65 @@
       }
     }
 
+    function buildLoggedInUserProfile(rawUserObj) {
+      const roleRaw = String(rawUserObj.role || rawUserObj.Role || 'User').trim();
+      const namaRaw = String(rawUserObj.nama || rawUserObj.Nama || '').trim();
+      const roleLower = roleRaw.toLowerCase();
+
+      // Normalisasi role: 'Admin', 'Juri' (atau 'User'), dan 'Peserta'
+      let normalizedRole = 'Juri';
+      if (roleLower === 'admin') normalizedRole = 'Admin';
+      else if (roleLower === 'peserta') normalizedRole = 'Peserta';
+      else normalizedRole = 'Juri';
+
+      if (normalizedRole === 'Peserta') {
+        const matchedPeserta = findPesertaByAnyNumber(namaRaw);
+        const regNo = matchedPeserta ? String(matchedPeserta['Nomor Peserta'] || '').trim() : namaRaw;
+        const assignedNo = matchedPeserta ? (getDisplayNoPesertaForReg(regNo) || regNo) : namaRaw;
+        return {
+          nama: matchedPeserta ? `${matchedPeserta['Nama Regu']} (${assignedNo})` : namaRaw,
+          role: 'Peserta',
+          nomorPeserta: assignedNo,
+          nomorRegistrasi: regNo,
+          namaRegu: matchedPeserta ? matchedPeserta['Nama Regu'] : namaRaw,
+          nomorKwarran: matchedPeserta ? matchedPeserta['Nomor Kwarran'] : '-',
+          nomorGudep: matchedPeserta ? matchedPeserta['Nomor Gudep'] : '-'
+        };
+      }
+
+      return {
+        nama: namaRaw,
+        role: normalizedRole
+      };
+    }
+
     document.getElementById('form-login').addEventListener('submit', async (e) => {
       e.preventDefault();
       const nama = document.getElementById('login-nama').value.trim();
       const password = document.getElementById('login-password').value.trim();
 
-      // 1. Cek apakah Username cocok dengan Nomor Peserta (A-001/B-001) atau Nomor Registrasi (REG-001)
-      const matchedPeserta = findPesertaByAnyNumber(nama);
-      if (matchedPeserta) {
-        const regNo = String(matchedPeserta['Nomor Peserta'] || '').trim();
-        const assignedNo = getDisplayNoPesertaForReg(regNo);
-        const gudepNo = String(matchedPeserta['Nomor Gudep'] || '').trim();
+      // 1. Cek kecocokan akun di tabel DATA USER (mendukung Admin, Juri, maupun Peserta yang di-input di Data User)
+      const localUserMatch = APP_DATA.users.find(u =>
+        String(u['Nama'] || '').trim().toLowerCase() === nama.toLowerCase() &&
+        String(u['Password'] || '').trim() === password
+      );
 
-        const passLower = password.toLowerCase();
-        const validPasswords = [
-          gudepNo.toLowerCase(),
-          regNo.toLowerCase(),
-          assignedNo.toLowerCase()
-        ].filter(Boolean);
-
-        if (validPasswords.includes(passLower)) {
-          const displayNo = assignedNo || regNo;
-          CURRENT_USER = {
-            nama: `${matchedPeserta['Nama Regu']} (${displayNo})`,
-            role: 'Peserta',
-            nomorPeserta: displayNo,
-            nomorRegistrasi: regNo,
-            namaRegu: matchedPeserta['Nama Regu'],
-            nomorKwarran: matchedPeserta['Nomor Kwarran'],
-            nomorGudep: gudepNo
-          };
-          sessionStorage.setItem('lt3_user', JSON.stringify(CURRENT_USER));
-          showToast(`Selamat datang, ${matchedPeserta['Nama Regu']} (${displayNo})!`);
-          enterAppShell();
-          return;
-        } else {
-          showToast("Password peserta salah! Gunakan Nomor Gudep atau Nomor Peserta.", "error");
-          return;
-        }
+      if (localUserMatch) {
+        CURRENT_USER = buildLoggedInUserProfile(localUserMatch);
+        sessionStorage.setItem('lt3_user', JSON.stringify(CURRENT_USER));
+        showToast(`Selamat datang, ${CURRENT_USER.nama} (${CURRENT_USER.role})!`);
+        enterAppShell();
+        return;
       }
 
-      // 2. Jika bukan peserta, verifikasi sebagai Admin / User Panitia melalui server
+      // 2. Verifikasi melalui server Google Apps Script (untuk akun yang baru ditambahkan di spreadsheet)
       showLoader("Memverifikasi akun...");
       try {
         const res = await apiCall({ action: 'login', nama, password });
         if (res.status === 'success') {
-          CURRENT_USER = res.user;
+          CURRENT_USER = buildLoggedInUserProfile(res.user);
           sessionStorage.setItem('lt3_user', JSON.stringify(CURRENT_USER));
-          showToast(`Selamat datang, ${CURRENT_USER.nama}!`);
+          showToast(`Selamat datang, ${CURRENT_USER.nama} (${CURRENT_USER.role})!`);
           enterAppShell();
         } else {
           showToast(res.message || "Login gagal! Periksa Username & Password.", "error");
@@ -1476,15 +1582,11 @@
       const isAdmin = roleLower === 'admin';
       const isPeserta = roleLower === 'peserta';
 
-      // Atur visibilitas elemen berdasarkan role
+      // Hanya Admin yang dapat melihat menu selain Penilaian
       document.querySelectorAll('.admin-only').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
       });
-      document.querySelectorAll('.staff-only').forEach(el => {
-        el.style.display = !isPeserta ? '' : 'none';
-      });
 
-      // Konfigurasi tampilan khusus halaman Penilaian / Nilai
       const navLabel = document.getElementById('nav-penilaian-label');
       const bannerPeserta = document.getElementById('peserta-nilai-banner');
       const inputCol = document.getElementById('penilaian-input-col');
@@ -1494,6 +1596,7 @@
       const tabelHeading = document.getElementById('tabel-penilaian-heading');
 
       if (isPeserta) {
+        // Peserta: Hanya menu Nilai dan hanya nilai regunya yang tampil
         navLabel.textContent = 'Nilai Regu Saya';
         bannerPeserta.classList.remove('hidden');
         inputCol.classList.add('hidden');
@@ -1503,6 +1606,7 @@
         tableCol.classList.add('lg:col-span-12');
         tabelHeading.textContent = `Rincian Perolehan Nilai - ${CURRENT_USER.namaRegu}`;
       } else {
+        // Admin & Juri: Akses penuh ke halaman Penilaian
         navLabel.textContent = 'Penilaian';
         bannerPeserta.classList.add('hidden');
         inputCol.classList.remove('hidden');
@@ -1515,11 +1619,11 @@
 
       refreshAllViews();
 
-      // Jika Peserta, langsung arahkan ke menu Nilai dan blokir tab lain
-      if (isPeserta) {
-        switchTab('penilaian');
-      } else {
+      // Routing awal berdasarkan Role: Admin -> Dashboard, Juri & Peserta -> Penilaian
+      if (isAdmin) {
         switchTab('dashboard');
+      } else {
+        switchTab('penilaian');
       }
     }
 
@@ -1533,8 +1637,11 @@
     }
 
     function switchTab(tabName) {
-      // Proteksi: Role Peserta hanya boleh membuka tab 'penilaian'
-      if (CURRENT_USER && String(CURRENT_USER.role).toLowerCase() === 'peserta' && tabName !== 'penilaian') {
+      const roleLower = CURRENT_USER ? String(CURRENT_USER.role || '').toLowerCase() : '';
+      const isAdmin = roleLower === 'admin';
+
+      // Proteksi ketat: Juri & Peserta hanya boleh membuka tab 'penilaian'
+      if (!isAdmin && tabName !== 'penilaian') {
         tabName = 'penilaian';
       }
 
@@ -2245,17 +2352,26 @@
     }
 
     // =========================================================
-    // CRUD DATA USER
+    // CRUD DATA USER (ADMIN, JURI & PESERTA)
     // =========================================================
     document.getElementById('form-user').addEventListener('submit', async (e) => {
       e.preventDefault();
       const isEdit = document.getElementById('user-is-edit').value === 'true';
+      const namaInput = document.getElementById('user-nama').value.trim();
+      const passwordInput = document.getElementById('user-password').value.trim();
+      const roleInput = document.getElementById('user-role').value;
+
+      if (!namaInput || !passwordInput) {
+        showToast("Username dan Password wajib diisi!", "warning");
+        return;
+      }
+
       const data = {
         isEdit,
         nomor: document.getElementById('user-nomor').value,
-        nama: document.getElementById('user-nama').value.trim(),
-        password: document.getElementById('user-password').value.trim(),
-        role: document.getElementById('user-role').value
+        nama: namaInput,
+        password: passwordInput,
+        role: roleInput
       };
 
       showLoader("Menyimpan data user...");
@@ -2265,6 +2381,8 @@
           showToast(res.message);
           resetFormUser();
           await syncAllData(false);
+        } else {
+          showToast(res.message || "Gagal menyimpan user", "error");
         }
       } finally {
         hideLoader();
@@ -2278,7 +2396,14 @@
       document.getElementById('user-nomor').value = u['Nomor'];
       document.getElementById('user-nama').value = u['Nama'];
       document.getElementById('user-password').value = u['Password'];
-      document.getElementById('user-role').value = u['Role'];
+
+      const roleRaw = String(u['Role'] || 'Juri').trim();
+      const roleLower = roleRaw.toLowerCase();
+      document.getElementById('user-role').value = roleLower === 'admin'
+        ? 'Admin'
+        : (roleLower === 'peserta' ? 'Peserta' : 'Juri');
+      onUserRoleChange();
+
       document.getElementById('form-user-title').innerHTML = `<i class="fa-solid fa-pen text-amber-600 mr-1"></i> Edit User #${u['Nomor']}`;
     }
 
@@ -2287,6 +2412,8 @@
       document.getElementById('user-is-edit').value = 'false';
       document.getElementById('user-nomor').value = '';
       document.getElementById('form-user-title').innerHTML = `<i class="fa-solid fa-user-gear text-pramuka-gold mr-1"></i> Input Data User`;
+      onUserRoleChange();
+      fillGeneratedPassword();
     }
 
     async function deleteUser(nomor) {
@@ -2452,9 +2579,8 @@
         `;
       }).join('') : `<tr><td colspan="5" class="p-4 text-center text-stone-400">Belum ada peserta daftar ulang</td></tr>`;
 
-      // Datalist Peserta pada Form Penilaian
-      const dl = document.getElementById('list-peserta-options');
-      dl.innerHTML = APP_DATA.peserta.map(p => {
+      // Datalist Peserta pada Form Penilaian & Form Data User
+      const pesertaOptionsHtml = APP_DATA.peserta.map(p => {
         const regNo = String(p['Nomor Peserta']).trim();
         const assignedNo = getDisplayNoPesertaForReg(regNo);
         const val = assignedNo || regNo;
@@ -2463,6 +2589,10 @@
           : `${regNo} - ${p['Nama Regu']} - ${p['Nomor Kwarran']}`;
         return `<option value="${val}">${label}</option>`;
       }).join('');
+
+      document.getElementById('list-peserta-options').innerHTML = pesertaOptionsHtml;
+      const userPesertaDl = document.getElementById('list-user-peserta-options');
+      if (userPesertaDl) userPesertaDl.innerHTML = pesertaOptionsHtml;
 
       // Populate Dropdown Mata Lomba pada Form Penilaian
       const selectLomba = document.getElementById('nilai-nama-lomba');
@@ -2548,7 +2678,6 @@
       const isAdmin = roleLower === 'admin';
       const isPeserta = roleLower === 'peserta';
 
-      // Filter dasar: jika role Peserta, hanya tampilkan baris nilai milik peserta tersebut
       let baseList = [...APP_DATA.penilaian].reverse();
       if (isPeserta && CURRENT_USER) {
         const myNo = String(CURRENT_USER.nomorPeserta || '').trim().toLowerCase();
@@ -2563,7 +2692,6 @@
                  (myRegu && rowRegu === myRegu);
         });
 
-        // Update ringkasan banner peserta
         const totalAkumulasi = baseList.reduce((acc, item) => acc + calculateRoundedScore(item['Nilai Juri 1'], item['Nilai Juri 2']), 0);
         const kat = getKategoriGudep(CURRENT_USER.nomorGudep);
         document.getElementById('peserta-banner-no').textContent = CURRENT_USER.nomorPeserta;
@@ -2644,22 +2772,44 @@
     }
 
     function renderUsersTable() {
-      document.getElementById('tbody-users').innerHTML = APP_DATA.users.map(u => `
-        <tr class="hover:bg-stone-50">
-          <td class="p-3 font-bold">${u['Nomor']}</td>
-          <td class="p-3 font-bold text-pramuka-dark">${u['Nama']}</td>
-          <td class="p-3 font-mono text-stone-500">${u['Password']}</td>
-          <td class="p-3">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${String(u['Role']).toLowerCase() === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-stone-200 text-stone-700'}">
-              ${u['Role']}
-            </span>
-          </td>
-          <td class="p-3 text-center space-x-1">
-            <button onclick="editUser('${u['Nomor']}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteUser('${u['Nomor']}')" class="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
+      const q = (document.getElementById('search-users')?.value || '').toLowerCase();
+      const filtered = APP_DATA.users.filter(u =>
+        String(u['Nama'] || '').toLowerCase().includes(q) ||
+        String(u['Role'] || '').toLowerCase().includes(q)
+      );
+
+      document.getElementById('tbody-users').innerHTML = filtered.length ? filtered.map(u => {
+        const roleRaw = String(u['Role'] || 'Juri').trim();
+        const roleLower = roleRaw.toLowerCase();
+        const roleLabel = roleLower === 'admin' ? 'Admin' : (roleLower === 'peserta' ? 'Peserta' : 'Juri');
+        const badgeClass = roleLower === 'admin'
+          ? 'bg-amber-100 text-amber-800'
+          : (roleLower === 'peserta' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800');
+
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="p-3 font-bold">${u['Nomor']}</td>
+            <td class="p-3 font-bold text-pramuka-dark">${u['Nama']}</td>
+            <td class="p-3 font-mono font-bold text-stone-700">${u['Password']}</td>
+            <td class="p-3">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badgeClass}">
+                ${roleLabel}
+              </span>
+            </td>
+            <td class="p-3 text-center space-x-1 whitespace-nowrap">
+              <button onclick="copyAccountCredentials('${String(u['Nama']).replace(/'/g, "\\'")}', '${String(u['Password']).replace(/'/g, "\\'")}')" class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded hover:bg-emerald-200" title="Salin Akun">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+              <button onclick="editUser('${u['Nomor']}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" title="Edit User">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="deleteUser('${u['Nomor']}')" class="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Hapus User">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="5" class="p-6 text-center text-stone-400">Belum ada data user</td></tr>`;
     }
 
     // =========================================================
