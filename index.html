@@ -200,12 +200,12 @@
 
       <form id="form-login" class="p-8 space-y-5">
         <div>
-          <label class="block text-xs font-bold uppercase text-stone-600 mb-1.5">Nama Pengguna (User / Admin)</label>
+          <label class="block text-xs font-bold uppercase text-stone-600 mb-1.5">Username / Nomor Peserta</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="login-nama" required placeholder="Masukkan nama pengguna..."
+            <input type="text" id="login-nama" required placeholder="Nama Panitia atau No. Peserta (A-001)..."
               class="w-full pl-10 pr-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold outline-none text-sm" />
           </div>
         </div>
@@ -216,12 +216,16 @@
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
               <i class="fa-solid fa-lock"></i>
             </span>
-            <input type="password" id="login-password" required placeholder="Masukkan password..."
+            <input type="password" id="login-password" required placeholder="Password / No. Gudep atau No. Peserta..."
               class="w-full pl-10 pr-10 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-pramuka-gold focus:border-pramuka-gold outline-none text-sm" />
             <button type="button" onclick="togglePassVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600">
               <i id="eye-icon" class="fa-solid fa-eye"></i>
             </button>
           </div>
+          <p class="text-[11px] text-stone-500 mt-1.5">
+            <i class="fa-solid fa-circle-info text-pramuka-gold mr-1"></i>
+            <b>Peserta:</b> Gunakan <b>Nomor Peserta</b> (mis. <code>A-001</code> / <code>B-001</code>) sebagai Username, dan <b>Nomor Gudep</b> atau <b>Nomor Peserta</b> sebagai Password.
+          </p>
         </div>
 
         <button type="submit"
@@ -275,14 +279,14 @@
       <!-- NAVIGATION BAR -->
       <nav class="bg-pramuka-primary/90 border-t border-stone-700 overflow-x-auto">
         <div class="max-w-7xl mx-auto px-4 flex space-x-1 py-1.5 text-xs font-bold whitespace-nowrap">
-          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn staff-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-chart-pie"></i> Dashboard
           </button>
           <button onclick="switchTab('scan')" data-tab="scan" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-qrcode"></i> Scan Daftar Ulang
           </button>
           <button onclick="switchTab('penilaian')" data-tab="penilaian" class="nav-btn px-3.5 py-2 rounded-lg flex items-center gap-2 transition bg-amber-600/30 text-amber-200">
-            <i class="fa-solid fa-star-half-stroke"></i> Penilaian
+            <i class="fa-solid fa-star-half-stroke"></i> <span id="nav-penilaian-label">Penilaian</span>
           </button>
           <button onclick="switchTab('lomba')" data-tab="lomba" class="nav-btn admin-only px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
             <i class="fa-solid fa-trophy"></i> Mata Lomba
@@ -307,7 +311,7 @@
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
 
       <!-- ===================================================== -->
-      <!-- TAB 1: DASHBOARD (ADMIN)                              -->
+      <!-- TAB 1: DASHBOARD (ADMIN / USER)                       -->
       <!-- ===================================================== -->
       <div id="tab-dashboard" class="tab-content space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -359,7 +363,7 @@
             <h2 class="font-bold text-pramuka-dark border-b pb-2 flex items-center gap-2">
               <i class="fa-solid fa-bolt text-pramuka-gold"></i> Pintasan Cepat Panitia
             </h2>
-            <button onclick="switchTab('scan')" class="w-full py-3 px-4 bg-pramuka-dark hover:bg-pramuka-primary text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
+            <button onclick="switchTab('scan')" class="admin-only w-full py-3 px-4 bg-pramuka-dark hover:bg-pramuka-primary text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
               <span><i class="fa-solid fa-qrcode mr-2 text-amber-400"></i> Buka Scanner Daftar Ulang</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -367,7 +371,7 @@
               <span><i class="fa-solid fa-pen-to-square mr-2"></i> Input / Impor Penilaian Lomba</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
-            <button onclick="switchTab('laporan')" class="w-full py-3 px-4 bg-stone-700 hover:bg-stone-800 text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
+            <button onclick="switchTab('laporan')" class="admin-only w-full py-3 px-4 bg-stone-700 hover:bg-stone-800 text-white rounded-xl font-bold text-sm flex items-center justify-between shadow">
               <span><i class="fa-solid fa-print mr-2 text-amber-300"></i> Cetak Laporan Putra / Putri PDF</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -483,12 +487,32 @@
       </div>
 
       <!-- ===================================================== -->
-      <!-- TAB 3: HALAMAN PENILAIAN (MANUAL, EDIT, IMPOR EXCEL)  -->
+      <!-- TAB 3: HALAMAN PENILAIAN (STAFF & VIEW PESERTA)       -->
       <!-- ===================================================== -->
       <div id="tab-penilaian" class="tab-content hidden space-y-6">
+
+        <!-- BANNER KHUSUS ROLE PESERTA -->
+        <div id="peserta-nilai-banner" class="hidden bg-gradient-to-r from-pramuka-dark via-pramuka-primary to-amber-900 text-white p-6 rounded-2xl shadow-lg border-b-4 border-pramuka-gold">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span id="peserta-banner-no" class="px-3 py-1 rounded-lg bg-pramuka-gold text-white font-black text-sm tracking-wider">A-001</span>
+                <span id="peserta-banner-kat" class="px-2.5 py-0.5 rounded-full bg-white/15 text-amber-200 font-bold text-[11px] uppercase">REGU PUTRA</span>
+              </div>
+              <h2 id="peserta-banner-regu" class="text-xl md:text-2xl font-extrabold uppercase tracking-wide pt-1">NAMA REGU</h2>
+              <p id="peserta-banner-info" class="text-xs text-stone-200">Kwarran • No. Gudep</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xs border border-amber-400/40 rounded-2xl px-6 py-4 text-center md:text-right shrink-0">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-amber-200">Total Akumulasi Nilai</p>
+              <p id="peserta-banner-total" class="text-3xl md:text-4xl font-black text-amber-400 mt-0.5">0</p>
+              <p id="peserta-banner-count" class="text-[11px] text-stone-200 mt-0.5">0 Mata Lomba Dinilai</p>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- FORM INPUT / EDIT PENILAIAN MANUAL -->
-          <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-primary space-y-4">
+          <!-- FORM INPUT / EDIT PENILAIAN MANUAL (HANYA PANITIA/ADMIN) -->
+          <div id="penilaian-input-col" class="lg:col-span-5 bg-white p-6 rounded-2xl shadow border-t-4 border-pramuka-primary space-y-4">
             <div class="flex items-center justify-between border-b pb-2.5">
               <h2 id="form-penilaian-title" class="font-extrabold text-pramuka-dark text-base flex items-center gap-2">
                 <i class="fa-solid fa-pen-ruler text-pramuka-gold"></i> Input Penilaian Lomba (Manual)
@@ -560,9 +584,9 @@
           </div>
 
           <!-- IMPOR DARI EXCEL & DAFTAR NILAI -->
-          <div class="lg:col-span-7 space-y-6">
-            <!-- BOX IMPOR EXCEL -->
-            <div class="bg-white p-6 rounded-2xl shadow border-t-4 border-emerald-600 space-y-4">
+          <div id="penilaian-table-col" class="lg:col-span-7 space-y-6">
+            <!-- BOX IMPOR EXCEL (HANYA PANITIA/ADMIN) -->
+            <div id="penilaian-excel-box" class="bg-white p-6 rounded-2xl shadow border-t-4 border-emerald-600 space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h2 class="font-extrabold text-stone-800 text-base flex items-center gap-2">
@@ -601,14 +625,14 @@
               </div>
             </div>
 
-            <!-- TABEL HASIL PENILAIAN TERKINI (DENGAN AKSI EDIT & HAPUS) -->
+            <!-- TABEL HASIL PENILAIAN TERKINI -->
             <div class="bg-white p-6 rounded-2xl shadow space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="font-bold text-pramuka-dark text-sm">Data Penilaian Tersimpan</h3>
-                <input type="text" id="search-nilai" onkeyup="renderPenilaianTable()" placeholder="Filter regu / lomba..."
+                <h3 id="tabel-penilaian-heading" class="font-bold text-pramuka-dark text-sm">Data Penilaian Tersimpan</h3>
+                <input type="text" id="search-nilai" onkeyup="renderPenilaianTable()" placeholder="Filter mata lomba..."
                   class="px-3 py-1.5 border border-stone-300 rounded-lg text-xs outline-none" />
               </div>
-              <div class="overflow-x-auto max-h-80">
+              <div class="overflow-x-auto max-h-96">
                 <table class="w-full text-left text-xs">
                   <thead class="bg-pramuka-light text-pramuka-dark font-bold uppercase sticky top-0">
                     <tr>
@@ -618,7 +642,7 @@
                       <th class="p-2.5 text-center">Juri 1</th>
                       <th class="p-2.5 text-center">Juri 2</th>
                       <th class="p-2.5 text-center">Total</th>
-                      <th class="p-2.5 text-center">Aksi</th>
+                      <th id="th-penilaian-aksi" class="p-2.5 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody id="tbody-penilaian" class="divide-y divide-stone-200"></tbody>
@@ -1368,7 +1392,7 @@
     }
 
     // =========================================================
-    // SISTEM LOGIN & LOGOUT
+    // SISTEM LOGIN & LOGOUT (MENDUKUNG ROLE PESERTA)
     // =========================================================
     function togglePassVisibility() {
       const inp = document.getElementById('login-password');
@@ -1387,6 +1411,42 @@
       const nama = document.getElementById('login-nama').value.trim();
       const password = document.getElementById('login-password').value.trim();
 
+      // 1. Cek apakah Username cocok dengan Nomor Peserta (A-001/B-001) atau Nomor Registrasi (REG-001)
+      const matchedPeserta = findPesertaByAnyNumber(nama);
+      if (matchedPeserta) {
+        const regNo = String(matchedPeserta['Nomor Peserta'] || '').trim();
+        const assignedNo = getDisplayNoPesertaForReg(regNo);
+        const gudepNo = String(matchedPeserta['Nomor Gudep'] || '').trim();
+
+        const passLower = password.toLowerCase();
+        const validPasswords = [
+          gudepNo.toLowerCase(),
+          regNo.toLowerCase(),
+          assignedNo.toLowerCase()
+        ].filter(Boolean);
+
+        if (validPasswords.includes(passLower)) {
+          const displayNo = assignedNo || regNo;
+          CURRENT_USER = {
+            nama: `${matchedPeserta['Nama Regu']} (${displayNo})`,
+            role: 'Peserta',
+            nomorPeserta: displayNo,
+            nomorRegistrasi: regNo,
+            namaRegu: matchedPeserta['Nama Regu'],
+            nomorKwarran: matchedPeserta['Nomor Kwarran'],
+            nomorGudep: gudepNo
+          };
+          sessionStorage.setItem('lt3_user', JSON.stringify(CURRENT_USER));
+          showToast(`Selamat datang, ${matchedPeserta['Nama Regu']} (${displayNo})!`);
+          enterAppShell();
+          return;
+        } else {
+          showToast("Password peserta salah! Gunakan Nomor Gudep atau Nomor Peserta.", "error");
+          return;
+        }
+      }
+
+      // 2. Jika bukan peserta, verifikasi sebagai Admin / User Panitia melalui server
       showLoader("Memverifikasi akun...");
       try {
         const res = await apiCall({ action: 'login', nama, password });
@@ -1396,7 +1456,7 @@
           showToast(`Selamat datang, ${CURRENT_USER.nama}!`);
           enterAppShell();
         } else {
-          showToast(res.message || "Login gagal!", "error");
+          showToast(res.message || "Login gagal! Periksa Username & Password.", "error");
         }
       } catch (err) {
         showToast("Gagal terhubung ke server", "error");
@@ -1412,13 +1472,55 @@
       document.getElementById('user-display-name').textContent = CURRENT_USER.nama;
       document.getElementById('user-display-role').textContent = CURRENT_USER.role;
 
-      const isAdmin = String(CURRENT_USER.role).toLowerCase() === 'admin';
+      const roleLower = String(CURRENT_USER.role || '').toLowerCase();
+      const isAdmin = roleLower === 'admin';
+      const isPeserta = roleLower === 'peserta';
+
+      // Atur visibilitas elemen berdasarkan role
       document.querySelectorAll('.admin-only').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
       });
+      document.querySelectorAll('.staff-only').forEach(el => {
+        el.style.display = !isPeserta ? '' : 'none';
+      });
+
+      // Konfigurasi tampilan khusus halaman Penilaian / Nilai
+      const navLabel = document.getElementById('nav-penilaian-label');
+      const bannerPeserta = document.getElementById('peserta-nilai-banner');
+      const inputCol = document.getElementById('penilaian-input-col');
+      const excelBox = document.getElementById('penilaian-excel-box');
+      const tableCol = document.getElementById('penilaian-table-col');
+      const thAksi = document.getElementById('th-penilaian-aksi');
+      const tabelHeading = document.getElementById('tabel-penilaian-heading');
+
+      if (isPeserta) {
+        navLabel.textContent = 'Nilai Regu Saya';
+        bannerPeserta.classList.remove('hidden');
+        inputCol.classList.add('hidden');
+        excelBox.classList.add('hidden');
+        thAksi.classList.add('hidden');
+        tableCol.classList.remove('lg:col-span-7');
+        tableCol.classList.add('lg:col-span-12');
+        tabelHeading.textContent = `Rincian Perolehan Nilai - ${CURRENT_USER.namaRegu}`;
+      } else {
+        navLabel.textContent = 'Penilaian';
+        bannerPeserta.classList.add('hidden');
+        inputCol.classList.remove('hidden');
+        excelBox.classList.remove('hidden');
+        thAksi.classList.remove('hidden');
+        tableCol.classList.remove('lg:col-span-12');
+        tableCol.classList.add('lg:col-span-7');
+        tabelHeading.textContent = 'Data Penilaian Tersimpan';
+      }
 
       refreshAllViews();
-      switchTab('dashboard');
+
+      // Jika Peserta, langsung arahkan ke menu Nilai dan blokir tab lain
+      if (isPeserta) {
+        switchTab('penilaian');
+      } else {
+        switchTab('dashboard');
+      }
     }
 
     function logout() {
@@ -1431,6 +1533,11 @@
     }
 
     function switchTab(tabName) {
+      // Proteksi: Role Peserta hanya boleh membuka tab 'penilaian'
+      if (CURRENT_USER && String(CURRENT_USER.role).toLowerCase() === 'peserta' && tabName !== 'penilaian') {
+        tabName = 'penilaian';
+      }
+
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('bg-pramuka-gold', 'text-white', 'shadow');
@@ -1559,7 +1666,6 @@
       showLoader(`Memverifikasi Nomor Registrasi: ${code}...`);
 
       try {
-        // Cari peserta berdasarkan Nomor Registrasi di data lokal terlebih dahulu
         const pesertaFound = findPesertaByAnyNumber(code);
         if (!pesertaFound) {
           hideLoader();
@@ -1573,7 +1679,6 @@
         const noRegistrasi = String(pesertaFound['Nomor Peserta']).trim();
         const kategori = getKategoriGudep(pesertaFound['Nomor Gudep']);
 
-        // Cek apakah sudah pernah daftar ulang sebelumnya
         const existingDU = APP_DATA.daftarUlang.find(d =>
           String(d._nomorRegistrasi || '').toLowerCase() === noRegistrasi.toLowerCase() ||
           String(d['Nomor Peserta'] || '').toLowerCase() === noRegistrasi.toLowerCase() ||
@@ -1592,7 +1697,6 @@
           return;
         }
 
-        // Generate Nomor Peserta otomatis: A-001 (Putra) / B-001 (Putri)
         const generatedNoPeserta = generateNextNomorPeserta(kategori);
 
         const res = await apiCall({
@@ -1610,7 +1714,6 @@
           speakText(kalimat);
           showToast(`Berhasil! ${p['Nama Regu']} mendapatkan Nomor Peserta: ${generatedNoPeserta}`, 'success');
 
-          // Simpan ke state lokal & bangun ulang mapping
           APP_DATA.daftarUlang.push({
             'Timestamp': res.timestamp,
             'Nomor Peserta': generatedNoPeserta,
@@ -1625,7 +1728,6 @@
           rebuildRegistrationMappings();
           refreshAllViews();
 
-          // Tampilkan Kartu Peserta dengan Nomor Peserta baru (A-001 / B-001)
           openIdCardModal(p, res.timestamp, "TERDAFTAR ULANG", "PESERTA", generatedNoPeserta);
 
         } else if (res.status === 'duplicate') {
@@ -1691,7 +1793,6 @@
         ? `Waktu Hadir: ${timestamp}`
         : 'Status: Siap Daftar Ulang';
 
-      // Render QR Code (pastikan hanya satu elemen gambar QR yang tampil agar tidak terduplikasi saat print)
       const qrBox = document.getElementById('card-qrcode-box');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
@@ -1827,7 +1928,6 @@
     // =========================================================
     // PENILAIAN (INPUT MANUAL + EDIT BARIS + IMPOR EXCEL)
     // =========================================================
-    // Fungsi helper perhitungan nilai rata-rata juri & pembulatan
     function calculateRoundedScore(rawJ1, rawJ2) {
       const s1 = String(rawJ1 ?? '').trim();
       const s2 = String(rawJ2 ?? '').trim();
@@ -1934,7 +2034,6 @@
 
       showLoader(editRowIndex ? "Memperbarui data penilaian..." : "Menyimpan nilai ke Google Sheets...");
       try {
-        // Jika mode edit, hapus baris lama lalu simpan data terbaru agar tetap kompatibel 100% dengan Code.gs
         if (editRowIndex) {
           await apiCall({ action: 'deletePenilaian', rowIndex: Number(editRowIndex) });
         }
@@ -2231,7 +2330,6 @@
           ctx.drawImage(img, 0, 0, w, h);
           tempLogoBase64 = canvas.toDataURL('image/png', 0.8);
 
-          // Langsung terapkan ke state & seluruh UI (termasuk halaman Laporan)
           APP_DATA.settings.logo = tempLogoBase64;
           localStorage.setItem('lt3_settings_cache', JSON.stringify(APP_DATA.settings));
           applySettingsToUI();
@@ -2255,7 +2353,6 @@
         daftarMataLomba: JSON.stringify(APP_DATA.lombaList)
       };
 
-      // Simpan langsung ke state lokal & cache browser agar langsung tampil tanpa ter-reset
       APP_DATA.settings = settingsPayload;
       localStorage.setItem('lt3_settings_cache', JSON.stringify(settingsPayload));
       applySettingsToUI();
@@ -2324,7 +2421,6 @@
     // RENDER SEMUA TABEL & STATISTIK
     // =========================================================
     function refreshAllViews() {
-      // Statistik Dashboard
       const totalP = APP_DATA.peserta.length;
       const totalDU = APP_DATA.daftarUlang.length;
       let countPutra = 0;
@@ -2356,7 +2452,7 @@
         `;
       }).join('') : `<tr><td colspan="5" class="p-4 text-center text-stone-400">Belum ada peserta daftar ulang</td></tr>`;
 
-      // Datalist Peserta pada Form Penilaian (menampilkan No. Peserta A-001/B-001 jika sudah daftar ulang)
+      // Datalist Peserta pada Form Penilaian
       const dl = document.getElementById('list-peserta-options');
       dl.innerHTML = APP_DATA.peserta.map(p => {
         const regNo = String(p['Nomor Peserta']).trim();
@@ -2368,7 +2464,7 @@
         return `<option value="${val}">${label}</option>`;
       }).join('');
 
-      // Populate Dropdown Mata Lomba pada Form Penilaian (dikelompokkan berdasarkan Kelompok Lomba)
+      // Populate Dropdown Mata Lomba pada Form Penilaian
       const selectLomba = document.getElementById('nilai-nama-lomba');
       const currentSelectedLomba = selectLomba.value;
       let lombaOptionsHtml = `<option value="">-- Pilih Mata Lomba --</option>`;
@@ -2448,8 +2544,37 @@
 
     function renderPenilaianTable() {
       const q = (document.getElementById('search-nilai').value || '').toLowerCase();
-      const isAdmin = CURRENT_USER && String(CURRENT_USER.role).toLowerCase() === 'admin';
-      const filtered = [...APP_DATA.penilaian].reverse().filter(n =>
+      const roleLower = CURRENT_USER ? String(CURRENT_USER.role || '').toLowerCase() : '';
+      const isAdmin = roleLower === 'admin';
+      const isPeserta = roleLower === 'peserta';
+
+      // Filter dasar: jika role Peserta, hanya tampilkan baris nilai milik peserta tersebut
+      let baseList = [...APP_DATA.penilaian].reverse();
+      if (isPeserta && CURRENT_USER) {
+        const myNo = String(CURRENT_USER.nomorPeserta || '').trim().toLowerCase();
+        const myReg = String(CURRENT_USER.nomorRegistrasi || '').trim().toLowerCase();
+        const myRegu = String(CURRENT_USER.namaRegu || '').trim().toLowerCase();
+
+        baseList = baseList.filter(n => {
+          const rowNo = String(n['Nomor Peserta'] || '').trim().toLowerCase();
+          const rowRegu = String(n['Nama Regu'] || '').trim().toLowerCase();
+          return (myNo && rowNo === myNo) ||
+                 (myReg && rowNo === myReg) ||
+                 (myRegu && rowRegu === myRegu);
+        });
+
+        // Update ringkasan banner peserta
+        const totalAkumulasi = baseList.reduce((acc, item) => acc + calculateRoundedScore(item['Nilai Juri 1'], item['Nilai Juri 2']), 0);
+        const kat = getKategoriGudep(CURRENT_USER.nomorGudep);
+        document.getElementById('peserta-banner-no').textContent = CURRENT_USER.nomorPeserta;
+        document.getElementById('peserta-banner-kat').textContent = `REGU ${kat}`;
+        document.getElementById('peserta-banner-regu').textContent = CURRENT_USER.namaRegu;
+        document.getElementById('peserta-banner-info').textContent = `Kwarran ${CURRENT_USER.nomorKwarran} • No. Gudep ${CURRENT_USER.nomorGudep} (No. Reg: ${CURRENT_USER.nomorRegistrasi})`;
+        document.getElementById('peserta-banner-total').textContent = totalAkumulasi;
+        document.getElementById('peserta-banner-count').textContent = `${baseList.length} Mata Lomba Dinilai`;
+      }
+
+      const filtered = baseList.filter(n =>
         String(n['Nomor Peserta']).toLowerCase().includes(q) ||
         String(n['Nama Regu']).toLowerCase().includes(q) ||
         String(n['Nama Lomba']).toLowerCase().includes(q)
@@ -2465,7 +2590,7 @@
           <td class="p-2.5 text-center">${n['Nilai Juri 1'] || '-'}</td>
           <td class="p-2.5 text-center">${n['Nilai Juri 2'] || '-'}</td>
           <td class="p-2.5 text-center font-extrabold text-emerald-700">${computedTotal}</td>
-          <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+          <td class="p-2.5 text-center space-x-1 whitespace-nowrap ${isPeserta ? 'hidden' : ''}">
             <button onclick="editPenilaian(${n._rowIndex})" class="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded" title="Edit Nilai">
               <i class="fa-solid fa-pen"></i>
             </button>
@@ -2475,7 +2600,7 @@
           </td>
         </tr>
       `;
-      }).join('') : `<tr><td colspan="7" class="p-6 text-center text-stone-400">Belum ada data penilaian</td></tr>`;
+      }).join('') : `<tr><td colspan="${isPeserta ? 6 : 7}" class="p-6 text-center text-stone-400">Belum ada data penilaian</td></tr>`;
     }
 
     function renderPesertaTable() {
@@ -2552,12 +2677,11 @@
     }
 
     function getLaporanDataset() {
-      const genderFilter = document.getElementById('filter-laporan-gender').value; // PUTRA | PUTRI
-      const mode = document.getElementById('filter-laporan-lomba').value; // REKAP_REGU | REKAP_KELOMPOK | ALL | <Nama Lomba>
+      const genderFilter = document.getElementById('filter-laporan-gender').value;
+      const mode = document.getElementById('filter-laporan-lomba').value;
 
       const labelGender = genderFilter === 'PUTRA' ? 'REGU PUTRA' : 'REGU PUTRI';
 
-      // Filter penilaian berdasarkan kategori Putra / Putri
       const filteredByGender = APP_DATA.penilaian.filter(n => {
         const kat = getPesertaKategori(n['Nomor Peserta']);
         return kat === genderFilter;
@@ -2594,7 +2718,6 @@
 
       if (mode === 'REKAP_KELOMPOK') {
         const selectedKelompok = document.getElementById('filter-laporan-kelompok').value;
-        // Ambil hanya nama mata lomba yang berada pada kelompok yang dipilih
         const lombaDiKelompok = APP_DATA.lombaList
           .filter(l => l.kelompok === selectedKelompok)
           .map(l => l.nama);
@@ -2682,7 +2805,6 @@
     }
 
     function printLaporanLandscape() {
-      // Tambahkan aturan @page landscape dinamis khusus saat print laporan
       const styleEl = document.createElement('style');
       styleEl.id = 'dynamic-landscape-print-style';
       styleEl.textContent = `@media print { @page { size: A4 landscape; margin: 10mm; } }`;
@@ -2698,7 +2820,6 @@
 
       window.addEventListener('afterprint', cleanupPrint);
       window.print();
-      // Fallback cleanup jika afterprint tidak terpicu pada beberapa browser
       setTimeout(cleanupPrint, 1500);
     }
 
@@ -2709,14 +2830,12 @@
       const dataset = getLaporanDataset();
       const genderFilter = document.getElementById('filter-laporan-gender').value;
 
-      // Logo di Kop Surat (jika tersedia)
       if (s.logo && s.logo.startsWith('data:image')) {
         try {
           doc.addImage(s.logo, 'PNG', 18, 10, 20, 20);
         } catch (e) {}
       }
 
-      // Kop Surat Resmi (posisi tengah halaman A4 Landscape 297mm -> X = 148.5)
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.text("GERAKAN PRAMUKA KWARTIR CABANG KABUPATEN TANGERANG", 148.5, 16, { align: "center" });
@@ -2728,7 +2847,6 @@
       doc.setLineWidth(0.7);
       doc.line(14, 33, 283, 33);
 
-      // Tabel Penilaian
       doc.autoTable({
         startY: 38,
         head: [dataset.headers],
@@ -2739,7 +2857,6 @@
         alternateRowStyles: { fillColor: [248, 246, 245] }
       });
 
-      // Kolom Tanda Tangan Ketua Panitia & Dewan Juri (menyesuaikan lebar A4 Landscape)
       let finalY = doc.lastAutoTable.finalY + 12;
       if (finalY > 165) {
         doc.addPage();
